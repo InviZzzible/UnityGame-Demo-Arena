@@ -5,24 +5,21 @@ using UnityEngine;
 public class RightShoulder : MonoBehaviour
 {
     private Rigidbody2D rbObj;
-    private Vector2 velocityPreCollision = new Vector2(0f, 0f); // Вектор скорости до столкновения
-    private bool isCollisionEnter = false; // Флаг обработки события OnCollisionEnter2D
 
     private AudioSource Hit;
-
+    private AudioSource Block;
 
     void Start()
     {
         rbObj = this.GetComponent<Rigidbody2D>();
         Hit = GameObject.Find("HitSound").GetComponent<AudioSource>();
+        Block = GameObject.Find("BlockSound").GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!isCollisionEnter) {
-            velocityPreCollision = rbObj.velocity;
-        }
+
     }
 
     // Функция для определения обратного вектора в результате столкновения двух объектов:
@@ -32,7 +29,7 @@ public class RightShoulder : MonoBehaviour
         float y = rbObj.transform.position.y;
 
         // Длина вектора будет максимальной из сторон объекта умноженного на коэффициент:
-        float max = Mathf.Max(rbObj.GetComponent<RectTransform>().rect.width, rbObj.GetComponent<RectTransform>().rect.height) * 20f;
+        float max = Mathf.Max(rbObj.GetComponent<RectTransform>().rect.width, rbObj.GetComponent<RectTransform>().rect.height) * 15f;
 
         if (rbObj.transform.position.x - cont.x < 0f) {
             x = rbObj.transform.position.x - max;
@@ -52,10 +49,8 @@ public class RightShoulder : MonoBehaviour
     }
 
     private void OnCollisionEnter2D(Collision2D collision) {
-        isCollisionEnter = true;
         GameObject oth = collision.gameObject;
         Rigidbody2D rbOther = oth.GetComponent<Rigidbody2D>();
-        velocityPreCollision = -velocityPreCollision;
 
         if (oth.name == "LeftWall" ||
             oth.name == "Roof" ||
@@ -74,33 +69,43 @@ public class RightShoulder : MonoBehaviour
             // -------------
         }
         else {
-            if (oth.name == "__Head") { // Получаем повреждение от удара головой
+            if (oth.name == "__Head") { // Получаем повреждение
                 ContactPoint2D[] contact = collision.contacts;
                 Vector2 cont = contact[0].point;
                 Vector2 move = VectorDirect(cont);
                 rbObj.AddForce(move, ForceMode2D.Impulse);
                 Hit.Play();
+                ShowEffect();
             }
             else if (oth.name == "__LeftHand" ||
                 oth.name == "__RightHand" ||
                 oth.name == "__LeftFoot" ||
-                oth.name == "__RightFoot") { // Получаем повреждение от ударов руками и ногами
+                oth.name == "__RightFoot") { // Получаем повреждение
                 ContactPoint2D[] contact = collision.contacts;
                 Vector2 cont = contact[0].point;
                 Vector2 move = VectorDirect(cont);
                 rbObj.AddForce(move, ForceMode2D.Impulse);
                 Hit.Play();
+                ShowEffect();
             }
-            else { // Остальное. Не получаем повреждений. А только отталкиваемся...
+            else { // Не получаем повреждений
                 ContactPoint2D[] contact = collision.contacts;
                 Vector2 cont = contact[0].point;
                 Vector2 move = VectorDirect(cont);
                 rbObj.AddForce(move, ForceMode2D.Impulse);
+                Block.Play();
             }
         }
     }
 
-    private void OnCollisionExit2D(Collision2D collision) {
-        isCollisionEnter = false;
+    IEnumerator SetTimeout(float sec) {
+        yield return new WaitForSeconds(sec);
+        this.GetComponent<CanvasRenderer>().SetColor(new Color(255f, 255f, 255f, 255f));
     }
+
+    private void ShowEffect() {
+        this.GetComponent<CanvasRenderer>().SetColor(new Color(255f, 0f, 0f, 255f));
+        StartCoroutine(SetTimeout(0.1f));
+    }
+
 }
