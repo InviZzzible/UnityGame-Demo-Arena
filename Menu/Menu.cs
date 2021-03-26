@@ -10,18 +10,13 @@ public class Menu : MonoBehaviour
     private GameObject Canvas;
     private AudioSource clickBtn;
 
-    // private int currentIndexPage = 0; // Текущий индекс текущей страницы в меню.
+    private int currentIndexPage; // Текущий индекс текущей страницы в меню.
 
-    // Start is called before the first frame update
     void Start()
     {
         Canvas = GameObject.Find("Canvas");
         clickBtn = GameObject.Find("ClickBtn").GetComponent<AudioSource>();
-
-        // Создание стартового UI меню:
-
-        // ... Перенести сюда создание нулевой (стартовой) страницы меню...
-
+        startPageUI();
     }
 
     // Update is called once per frame
@@ -29,16 +24,83 @@ public class Menu : MonoBehaviour
     {
         
     }
-    
-    private Vector4 ConvertFromRGBA255toRGBA01(float R, float G, float B, float A) {
-        // Конвертируем представление цвета из диапазона до 255 в диапазон до 1.0:
-        R /= 255;
-        G /= 255;
-        B /= 255;
-        A /= 255;
-        return new Vector4(R, G, B, A);
-    }
 
+    private void startPageUI() {
+        // Создание стартового UI меню:
+        // Создание кнопоки для создания нового персонажа:
+        currentIndexPage = 0;
+        GameObject newCharacter = new GameObject("CreateNewCharacter", typeof(Image), typeof(Button), typeof(LayoutElement));
+        newCharacter.transform.SetParent(Canvas.transform);
+        RectTransform newCharacterRT = newCharacter.GetComponent<RectTransform>();
+        newCharacterRT.localScale = new Vector3(1f, 1f, 1f);
+        newCharacterRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        newCharacterRT.sizeDelta = new Vector2(250f, 100f);
+        newCharacterRT.anchorMin = new Vector2(0.5f, 0.5f);
+        newCharacterRT.anchorMax = new Vector2(0.5f, 0.5f);
+        newCharacterRT.anchoredPosition = new Vector3(0f, 70f);
+        newCharacter.GetComponent<Image>().color = new Color(10f / 255f, 10f / 255f, 10f / 255f, 200f / 255f);
+        newCharacter.AddComponent<Outline>().effectColor = new Color(1f, 1f, 1f, 1f);
+        newCharacter.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+        newCharacter.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        newCharacter.layer = 5;
+
+        GameObject txtnewCharacter = new GameObject(); // Создание текста для кнопки.
+        txtnewCharacter.name = "Text";
+        txtnewCharacter.transform.SetParent(newCharacter.transform);
+        RectTransform RTtxtnewCharacter = txtnewCharacter.AddComponent<RectTransform>();
+        RTtxtnewCharacter.localScale = new Vector3(1f, 1f, 1f);
+        RTtxtnewCharacter.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        RTtxtnewCharacter.sizeDelta = new Vector2(250f, 20f);
+        RTtxtnewCharacter.anchorMin = new Vector2(0.5f, 0.5f);
+        RTtxtnewCharacter.anchorMax = new Vector2(0.5f, 0.5f);
+        RTtxtnewCharacter.anchoredPosition = new Vector3(0f, 0f);
+        Text textnewCharacter = txtnewCharacter.AddComponent<Text>();
+        textnewCharacter.text = "Create a new character...";
+        textnewCharacter.color = new Color(1f, 1f, 1f, 1f);
+        textnewCharacter.fontSize = 16;
+        textnewCharacter.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        textnewCharacter.alignment = TextAnchor.MiddleCenter;
+        txtnewCharacter.layer = 5;
+
+        // Создание кнопоки если пользователь хочет продолжить играть уже созданным персонажем:
+        GameObject haveCharacter = new GameObject("IAlreadyHaveTheCharacter", typeof(Image), typeof(Button), typeof(LayoutElement));
+        haveCharacter.transform.SetParent(Canvas.transform);
+        RectTransform haveCharacterRT = haveCharacter.GetComponent<RectTransform>();
+        haveCharacterRT.localScale = new Vector3(1f, 1f, 1f);
+        haveCharacterRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        haveCharacterRT.sizeDelta = new Vector2(250f, 100f);
+        haveCharacterRT.anchorMin = new Vector2(0.5f, 0.5f);
+        haveCharacterRT.anchorMax = new Vector2(0.5f, 0.5f);
+        haveCharacterRT.anchoredPosition = new Vector3(0f, -70f);
+        haveCharacter.GetComponent<Image>().color = new Color(10f / 255f, 10f / 255f, 10f / 255f, 200f / 255f);
+        haveCharacter.AddComponent<Outline>().effectColor = new Color(1f, 1f, 1f, 1f);
+        haveCharacter.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+        haveCharacter.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        haveCharacter.layer = 5;
+
+        GameObject txtHaveCharacter = new GameObject(); // Создание текста для кнопки.
+        txtHaveCharacter.name = "Text";
+        txtHaveCharacter.transform.SetParent(haveCharacter.transform);
+        RectTransform RTtxtHaveCharacter = txtHaveCharacter.AddComponent<RectTransform>();
+        RTtxtHaveCharacter.localScale = new Vector3(1f, 1f, 1f);
+        RTtxtHaveCharacter.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        RTtxtHaveCharacter.sizeDelta = new Vector2(250f, 20f);
+        RTtxtHaveCharacter.anchorMin = new Vector2(0.5f, 0.5f);
+        RTtxtHaveCharacter.anchorMax = new Vector2(0.5f, 0.5f);
+        RTtxtHaveCharacter.anchoredPosition = new Vector3(0f, 0f);
+        Text textHaveCharacter = txtHaveCharacter.AddComponent<Text>();
+        textHaveCharacter.text = "I already have the character...";
+        textHaveCharacter.color = new Color(1f, 1f, 1f, 1f);
+        textHaveCharacter.fontSize = 16;
+        textHaveCharacter.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        textHaveCharacter.alignment = TextAnchor.MiddleCenter;
+        txtHaveCharacter.layer = 5;
+
+        // Обработчики событий для кнопок:
+        newCharacter.GetComponent<Button>().onClick.AddListener(() => SignUp_Slot());
+        haveCharacter.GetComponent<Button>().onClick.AddListener(() => SignIn_Slot());
+    }
+    
     private void CreateTheInputField(string nameObj, float y) {
         //GameObject input = new GameObject(nameObj, typeof(InputField), typeof(LayoutElement));
         GameObject input = new GameObject();
@@ -69,9 +131,8 @@ public class Menu : MonoBehaviour
         RTborder.anchoredPosition = new Vector3(0f, 0f, 0f);
 
         Image imgBorder = border.GetComponent<Image>();
-        imgBorder.sprite = Resources.Load<Sprite>("Square"); // Почему то не работает... ???
-        Vector4 vColor = ConvertFromRGBA255toRGBA01(50f, 50f, 50f, 100f);
-        imgBorder.color = new Color(vColor[0], vColor[1], vColor[2], vColor[3]);
+        // imgBorder.sprite = Resources.Load("BorderSprite", typeof(Sprite)) as Sprite; // !!!
+        imgBorder.color = new Color(50f/255f, 50f / 255f, 50f / 255f, 100f / 255f);
         imgBorder.type = Image.Type.Tiled;
 
 
@@ -98,8 +159,7 @@ public class Menu : MonoBehaviour
         ifd.placeholder = phText;
         placeholderObj.GetComponent<Text>().font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
         placeholderObj.GetComponent<Text>().fontStyle = FontStyle.Italic;
-        vColor = ConvertFromRGBA255toRGBA01(100f, 100f, 100f, 150f);
-        placeholderObj.GetComponent<Text>().color = new Color(vColor[0], vColor[1], vColor[2], vColor[3]);
+        placeholderObj.GetComponent<Text>().color = new Color(100f/255f, 100f / 255f, 100f / 255f, 150f / 255f);
 
 
         Graphic myGraphic = input.GetComponent<Graphic>();
@@ -129,8 +189,7 @@ public class Menu : MonoBehaviour
         textscript.resizeTextMinSize = 10;
 
         ColorBlock cb = input.GetComponent<InputField>().colors;
-        Vector4 v = ConvertFromRGBA255toRGBA01(140f, 140f, 140f, 255f);
-        cb.normalColor = new Color(v[0], v[1], v[2], v[3]);
+        cb.normalColor = new Color(140f/255f, 140f / 255f, 140f / 255f, 1f);
         input.GetComponent<InputField>().colors = cb;
 
         input.layer = 5;
@@ -158,6 +217,7 @@ public class Menu : MonoBehaviour
     public void SignUp_Slot() { // Пользователь хочет создать нового персонажа
 
         clickBtn.Play();
+        currentIndexPage = 1;
 
         // Создание вложенного интерфейса:
         GameObject CreateNewCharacterBtn = GameObject.Find("CreateNewCharacter");
@@ -271,31 +331,74 @@ public class Menu : MonoBehaviour
         textBack.alignment = TextAnchor.MiddleCenter;
         txtBack.layer = 5;
 
-        
-        
+        // Создание кнопки, чтобы просмотреть пароль:
+        GameObject look = new GameObject("signupLook", typeof(Image), typeof(Button), typeof(LayoutElement));
+        look.transform.SetParent(Canvas.transform.Find("signupInputPassword").gameObject.transform);
+        RectTransform lookRT = look.GetComponent<RectTransform>();
+        lookRT.localScale = new Vector3(1f, 1f, 1f);
+        lookRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        lookRT.sizeDelta = new Vector2(40f, 40f);
+        lookRT.anchorMin = new Vector2(1f, 0.5f);
+        lookRT.anchorMax = new Vector2(1f, 0.5f);
+        lookRT.anchoredPosition = new Vector3(25f, 0f);
+        look.GetComponent<Image>().color = new Color(22f / 255f, 22f / 255f, 22f / 255f, 1f);
+        look.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        look.layer = 5;
+
+
+        // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ КНОПОК:
+        // Обработчик события на нажатие кнопки Look:
+        look.GetComponent<Button>().onClick.AddListener(() => {
+            InputField inputF = Canvas.transform.Find("signupInputPassword").gameObject.GetComponent<InputField>();
+            if (inputF.contentType == InputField.ContentType.Password) inputF.contentType = InputField.ContentType.Standard;
+            else inputF.contentType = InputField.ContentType.Password;
+
+            EventSystem.current.SetSelectedGameObject(inputF.gameObject, null); // Устанавливаем фокус.
+
+        });
 
         // Обработчик события на нажатие кнопки Done:
-        done.GetComponent<Button>().onClick.AddListener(() => CreateNewCharacterWithUniqNicknameAndPassword_Slot(
-            Canvas.transform.Find("signupInputNickname").gameObject.GetComponent<InputField>().text,
-            Canvas.transform.Find("signupInputPassword").gameObject.GetComponent<InputField>().text)
-        );
+        done.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+            currentIndexPage = 2;
+
+            // Удаляем ненужные объекты текущей страницы:
+            Destroy(header);
+            Destroy(description);
+            Destroy(back);
+            Destroy(done);
+            Destroy(look);
+            Destroy(GameObject.Find("signupInputNickname"));
+            Destroy(GameObject.Find("signupInputPassword"));
+
+            CreateNewCharacterWithUniqNicknameAndPassword_Slot(
+                Canvas.transform.Find("signupInputNickname").gameObject.GetComponent<InputField>().text,
+                Canvas.transform.Find("signupInputPassword").gameObject.GetComponent<InputField>().text
+            );
+        });
 
         // Обработчик события на нажатие кнопки Back:
         back.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
-            /*
-            inputUniqNickname.SetActive(false);
-            inputPassword.SetActive(false);
-            done.SetActive(false);
-            back.SetActive(false);
 
-            CreateNewCharacterBtn.SetActive(false);
-            IAlreadyHaveTheCharacterBtn.SetActive(false);
-            */
+            // Удаляем ненужные объекты текущей страницы:
+            Destroy(header);
+            Destroy(description);
+            Destroy(back);
+            Destroy(done);
+            Destroy(look);
+            Destroy(GameObject.Find("signupInputNickname"));
+            Destroy(GameObject.Find("signupInputPassword"));
+
+            startPageUI(); // Создаем интерфейс стартовой страницы.
         });
     }
 
     public void SignIn_Slot() { // У пользователя уже есть перс и он хочет продолжить играть с ним.
+        clickBtn.Play();
+        currentIndexPage = 3;
+
+        // ...
 
     }
 
@@ -304,10 +407,11 @@ public class Menu : MonoBehaviour
     }
 
     private void CreateNewCharacterWithUniqNicknameAndPassword_Slot(string newNickname, string newPass) { // Пользователь создает нового персонажа.
-        clickBtn.Play();
         // Здесь будем проверять существование такого ника в бд и если Ник является уникальным а пароль не является пустым полем, то переходим к следующей вкладке...
 
         // ...
+
+
         print(newNickname + "   " + newPass);
     }
 
