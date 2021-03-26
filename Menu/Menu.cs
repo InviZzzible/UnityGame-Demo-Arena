@@ -97,8 +97,16 @@ public class Menu : MonoBehaviour
         txtHaveCharacter.layer = 5;
 
         // Обработчики событий для кнопок:
-        newCharacter.GetComponent<Button>().onClick.AddListener(() => SignUp_Slot());
-        haveCharacter.GetComponent<Button>().onClick.AddListener(() => SignIn_Slot());
+        newCharacter.GetComponent<Button>().onClick.AddListener(() => {
+            Destroy(newCharacter);
+            Destroy(haveCharacter);
+            Sign_Slot(1);
+        });
+        haveCharacter.GetComponent<Button>().onClick.AddListener(() => {
+            Destroy(newCharacter);
+            Destroy(haveCharacter);
+            Sign_Slot(3);
+        });
     }
     
     private void CreateTheInputField(string nameObj, float y) {
@@ -150,7 +158,7 @@ public class Menu : MonoBehaviour
         rtPlaceholder.anchoredPosition = new Vector3(110f, -20f, 0f);
 
         Text phText = placeholderObj.AddComponent<Text>();
-        if (input.name == "signupInputNickname") phText.text = "Input your nickname...";
+        if (input.name == "signInputNickname") phText.text = "Input your nickname...";
         else {
             phText.text = "Pick a password...";
             ifd.contentType = InputField.ContentType.Password;
@@ -204,29 +212,29 @@ public class Menu : MonoBehaviour
                 }
             }
             else {
-                if(input.gameObject.name == "signupInputNickname") text.text = "Input your nickname...";
+                if(input.gameObject.name == "signInputNickname") text.text = "Input your nickname...";
                 else text.text = "Pick a password...";
             }
         });
 
-        if (nameObj == "signupInputNickname") {
+        if (nameObj == "signInputNickname") {
             EventSystem.current.SetSelectedGameObject(input.gameObject, null); // Устанавливаем фокус.
         }
     }
 
-    public void SignUp_Slot() { // Пользователь хочет создать нового персонажа
+    public void Sign_Slot(int nextIndex) { // Пользователь хочет создать нового персонажа или же продолжить играть уже существующим:
 
         clickBtn.Play();
-        currentIndexPage = 1;
+        currentIndexPage = nextIndex; // 1 или 3
 
-        // Создание вложенного интерфейса:
         GameObject CreateNewCharacterBtn = GameObject.Find("CreateNewCharacter");
         GameObject IAlreadyHaveTheCharacterBtn = GameObject.Find("IAlreadyHaveTheCharacter");
         CreateNewCharacterBtn.SetActive(false);
         IAlreadyHaveTheCharacterBtn.SetActive(false);
 
+        // Создание вложенного интерфейса:
         // Создание Заголовка:
-        GameObject header = new GameObject("signupHeader", typeof(Text), typeof(LayoutElement));
+        GameObject header = new GameObject("signHeader", typeof(Text), typeof(LayoutElement));
         header.transform.SetParent(Canvas.transform);
         RectTransform rtHeader = header.GetComponent<RectTransform>();
         rtHeader.localScale = new Vector3(1f, 1f, 1f);
@@ -238,7 +246,8 @@ public class Menu : MonoBehaviour
         rtHeader.anchoredPosition = new Vector3(0f, -75f, 0f); // Устанавливаем позицию относительно анкеров.
         header.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
         header.GetComponent<Text>().fontSize = 18;
-        header.GetComponent<Text>().text = "Creating your character:";
+        if (currentIndexPage == 1) header.GetComponent<Text>().text = "Creating your character:";
+        else if (currentIndexPage == 3) header.GetComponent<Text>().text = "Sign in to your account:";
         header.GetComponent<Text>().font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
         Outline outlineHeader = header.AddComponent<Outline>();
         outlineHeader.effectColor = new Color(255f, 255f, 255f, 100f);
@@ -246,29 +255,30 @@ public class Menu : MonoBehaviour
         header.layer = 5;
 
         // Создание описания:
-        GameObject description = new GameObject("signupDescription", typeof(Text), typeof(LayoutElement));
+        GameObject description = new GameObject("signDescription", typeof(Text), typeof(LayoutElement));
         description.transform.SetParent(Canvas.transform);
         RectTransform rtDescription = description.GetComponent<RectTransform>();
         rtDescription.localScale = new Vector3(1f, 1f, 1f);
         rtDescription.localRotation = new Quaternion(0f, 0f, 0f, 0f);
         rtDescription.anchorMin = new Vector2(0.5f, 1f);
         rtDescription.anchorMax = new Vector2(0.5f, 1f);
-        rtDescription.sizeDelta = new Vector2(300f, 20f); // Set width and height
+        rtDescription.sizeDelta = new Vector2(400f, 20f); // Set width and height
         rtDescription.localPosition = new Vector3(0f, 0f, 0f);
         rtDescription.anchoredPosition = new Vector3(0f, -100f, 0f);
         description.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
         description.GetComponent<Text>().fontStyle = FontStyle.Italic;
         description.GetComponent<Text>().fontSize = 10;
-        description.GetComponent<Text>().text = "Come up with a nickname that will be unique in this game!";
+        if (currentIndexPage == 1) description.GetComponent<Text>().text = "Come up with a nickname that will be unique in this game!";
+        else if (currentIndexPage == 3) description.GetComponent<Text>().text = "Enter the nickname and password for the previously created account!";
         description.GetComponent<Text>().font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
         description.layer = 5;
 
         // Создаем поля Input Field - ы:
-        CreateTheInputField("signupInputNickname", -160f); // 1й
-        CreateTheInputField("signupInputPassword", -220f); // 2й
+        CreateTheInputField("signInputNickname", -160f); // 1й
+        CreateTheInputField("signInputPassword", -220f); // 2й
 
         // Создание кнопоки done:
-        GameObject done = new GameObject("signupDone", typeof(Image), typeof(Button), typeof(LayoutElement));
+        GameObject done = new GameObject("signDone", typeof(Image), typeof(Button), typeof(LayoutElement));
         done.transform.SetParent(Canvas.transform);
         RectTransform doneRT = done.GetComponent<RectTransform>();
         doneRT.localScale = new Vector3(1f, 1f, 1f);
@@ -280,7 +290,7 @@ public class Menu : MonoBehaviour
         done.GetComponent<Image>().color = new Color(85f / 255f, 114f / 255f, 50f / 255f, 255f / 255f);
         done.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
         done.layer = 5;
-        
+
         GameObject txtDone = new GameObject(); // Создание текста для кнопки.
         txtDone.name = "txtDone";
         txtDone.transform.SetParent(done.transform);
@@ -300,7 +310,7 @@ public class Menu : MonoBehaviour
         txtDone.layer = 5;
 
         // Создание кнопоки back:
-        GameObject back = new GameObject("signupBack", typeof(Image), typeof(Button), typeof(LayoutElement));
+        GameObject back = new GameObject("signBack", typeof(Image), typeof(Button), typeof(LayoutElement));
         back.transform.SetParent(Canvas.transform);
         RectTransform backRT = back.GetComponent<RectTransform>();
         backRT.localScale = new Vector3(1f, 1f, 1f);
@@ -312,7 +322,7 @@ public class Menu : MonoBehaviour
         back.GetComponent<Image>().color = new Color(145f / 255f, 75f / 255f, 67f / 255f, 1f);
         back.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
         back.layer = 5;
-        
+
         GameObject txtBack = new GameObject(); // Создание текста для кнопки.
         txtBack.name = "txtBack";
         txtBack.transform.SetParent(back.transform);
@@ -332,16 +342,17 @@ public class Menu : MonoBehaviour
         txtBack.layer = 5;
 
         // Создание кнопки, чтобы просмотреть пароль:
-        GameObject look = new GameObject("signupLook", typeof(Image), typeof(Button), typeof(LayoutElement));
-        look.transform.SetParent(Canvas.transform.Find("signupInputPassword").gameObject.transform);
+        GameObject look = new GameObject("signLook", typeof(Image), typeof(Button), typeof(LayoutElement));
+        look.transform.SetParent(Canvas.transform.Find("signInputPassword").gameObject.transform);
         RectTransform lookRT = look.GetComponent<RectTransform>();
         lookRT.localScale = new Vector3(1f, 1f, 1f);
         lookRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
         lookRT.sizeDelta = new Vector2(40f, 40f);
         lookRT.anchorMin = new Vector2(1f, 0.5f);
         lookRT.anchorMax = new Vector2(1f, 0.5f);
-        lookRT.anchoredPosition = new Vector3(25f, 0f);
-        look.GetComponent<Image>().color = new Color(22f / 255f, 22f / 255f, 22f / 255f, 1f);
+        lookRT.anchoredPosition = new Vector3(25f, 2f);
+        look.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+        look.GetComponent<Image>().sprite = Resources.Load("iceSprite", typeof(Sprite)) as Sprite;
         look.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
         look.layer = 5;
 
@@ -349,10 +360,16 @@ public class Menu : MonoBehaviour
         // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ КНОПОК:
         // Обработчик события на нажатие кнопки Look:
         look.GetComponent<Button>().onClick.AddListener(() => {
-            InputField inputF = Canvas.transform.Find("signupInputPassword").gameObject.GetComponent<InputField>();
-            if (inputF.contentType == InputField.ContentType.Password) inputF.contentType = InputField.ContentType.Standard;
-            else inputF.contentType = InputField.ContentType.Password;
-
+            clickBtn.Play();
+            InputField inputF = Canvas.transform.Find("signInputPassword").gameObject.GetComponent<InputField>();
+            if (inputF.contentType == InputField.ContentType.Password) {
+                inputF.contentType = InputField.ContentType.Standard;
+                look.GetComponent<Image>().color = new Color(22f / 255f, 22f / 255f, 22f / 255f, 1f);
+            }
+            else {
+                inputF.contentType = InputField.ContentType.Password;
+                look.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+            }
             EventSystem.current.SetSelectedGameObject(inputF.gameObject, null); // Устанавливаем фокус.
 
         });
@@ -360,21 +377,70 @@ public class Menu : MonoBehaviour
         // Обработчик события на нажатие кнопки Done:
         done.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
-            currentIndexPage = 2;
 
-            // Удаляем ненужные объекты текущей страницы:
-            Destroy(header);
-            Destroy(description);
-            Destroy(back);
-            Destroy(done);
-            Destroy(look);
-            Destroy(GameObject.Find("signupInputNickname"));
-            Destroy(GameObject.Find("signupInputPassword"));
+            string textNick = Canvas.transform.Find("signInputNickname").gameObject.GetComponent<InputField>().text;
+            string textPass = Canvas.transform.Find("signInputPassword").gameObject.GetComponent<InputField>().text;
 
-            CreateNewCharacterWithUniqNicknameAndPassword_Slot(
-                Canvas.transform.Find("signupInputNickname").gameObject.GetComponent<InputField>().text,
-                Canvas.transform.Find("signupInputPassword").gameObject.GetComponent<InputField>().text
-            );
+            if (textNick != "" && textPass != "") {
+                if (currentIndexPage == 1) {
+                    if (true /* Здесь будем проверять уникальность введенного ника в БД и если ник уникален тогда запускаем функцию:  */) {
+                        currentIndexPage = 2;
+
+                        // Удаляем ненужные объекты текущей страницы:
+                        Destroy(header);
+                        Destroy(description);
+                        Destroy(back);
+                        Destroy(done);
+                        Destroy(look);
+                        Destroy(GameObject.Find("signInputNickname"));
+                        Destroy(GameObject.Find("signInputPassword"));
+
+                        ChangeCharacterDone_Slot(textNick, textPass); // Переходим к выбору персонажа...
+                    }
+                    else { // Если нет, тогда остаемся на этой же странице, указывая пользователю, что его ник не уникален:
+                        Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
+                        StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f/255f), "signInputNickname", "Border"));
+
+                        MessageOfError("The nickname you entered is not unique !", -120f);
+                        StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                    }
+
+                }
+                else if (currentIndexPage == 3) {
+                    if (true /* Здесь будем проверять существует ли такая запись в БД и если да, то проходим в основное меню игры  */) { // !!!!!!!!!!!!!!!!!!!!
+                        currentIndexPage = 4;
+
+                        // Удаляем ненужные объекты текущей страницы:
+                        Destroy(header);
+                        Destroy(description);
+                        Destroy(back);
+                        Destroy(done);
+                        Destroy(look);
+                        Destroy(GameObject.Find("signInputNickname"));
+                        Destroy(GameObject.Find("signInputPassword"));
+
+                        MainMenu(textNick, textPass);
+                    }
+                    else {
+                        Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
+                        StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+
+                        MessageOfError("Account with nickname " + textNick + " does not exist !", -120f);
+                        StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                    }
+                }
+            }
+            else {
+                if (textNick == "") {
+                    Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
+                    StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                }
+                if (textPass == "") {
+                    Canvas.transform.Find("signInputPassword").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f/255, 20f/255f, 20f/255f, 1f);
+                    StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputPassword", "Border"));
+                }
+                MessageOfError("One of the fields is empty !", -120f);
+            }
         });
 
         // Обработчик события на нажатие кнопки Back:
@@ -387,45 +453,54 @@ public class Menu : MonoBehaviour
             Destroy(back);
             Destroy(done);
             Destroy(look);
-            Destroy(GameObject.Find("signupInputNickname"));
-            Destroy(GameObject.Find("signupInputPassword"));
+            Destroy(GameObject.Find("signInputNickname"));
+            Destroy(GameObject.Find("signInputPassword"));
 
             startPageUI(); // Создаем интерфейс стартовой страницы.
         });
     }
 
-    public void SignIn_Slot() { // У пользователя уже есть перс и он хочет продолжить играть с ним.
-        clickBtn.Play();
-        currentIndexPage = 3;
+    private void MessageOfError(string str, float posY) {
+        // Создаем временное сообщение для пользователя:
+        GameObject err = new GameObject("err", typeof(Text), typeof(LayoutElement));
+        err.transform.SetParent(Canvas.transform);
+        RectTransform rtErr = err.GetComponent<RectTransform>();
+        rtErr.localScale = new Vector3(1f, 1f, 1f);
+        rtErr.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        rtErr.anchorMin = new Vector2(0.5f, 1f);
+        rtErr.anchorMax = new Vector2(0.5f, 1f);
+        rtErr.sizeDelta = new Vector2(400f, 20f); // Set width and height
+        rtErr.localPosition = new Vector3(0f, 0f, 0f);
+        rtErr.anchoredPosition = new Vector3(0f, posY, 0f);
+        err.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
+        err.GetComponent<Text>().fontStyle = FontStyle.Italic;
+        err.GetComponent<Text>().fontSize = 10;
+        err.GetComponent<Text>().text = str;
+        err.GetComponent<Text>().font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        err.layer = 5;
+        Text errText = err.GetComponent<Text>();
+        errText.color = new Color(1f, 0f, 0f, 1f);
+        StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+        Destroy(err, 3f);
+    }
+
+    public void ChangeCharacterDone_Slot(string newNickname, string newPass) { // Выбор создаваемого персонажа:
 
         // ...
 
     }
 
-    public void InputsTheNicknameAndPasswordDone_Slot(string nickname, string pass) { // Персонаж уже есть, пользователь входит в свою уч. запись.
-
-    }
-
-    private void CreateNewCharacterWithUniqNicknameAndPassword_Slot(string newNickname, string newPass) { // Пользователь создает нового персонажа.
-        // Здесь будем проверять существование такого ника в бд и если Ник является уникальным а пароль не является пустым полем, то переходим к следующей вкладке...
+    private void MainMenu(string nickname, string password) { // Главное меню игры:
 
         // ...
 
-
-        print(newNickname + "   " + newPass);
     }
 
-    public void ChangeCharacterDone_Slot(int num) { // Выбор создаваемого персонажа
-
-    }
-
-    private void LoadMainMenuScene() { // Загрузка сцены с главным меню игры.
-
-    }
-
-    IEnumerator SetTimeout(float sec) {
+    IEnumerator SetTimeoutChangeColor(float sec, Vector4 vectorColor, string name, string name2 = "") {
         yield return new WaitForSeconds(sec);
         
+        Canvas.transform.Find(name).gameObject.transform.Find(name2).gameObject.GetComponent<Image>().color =
+            new Color(vectorColor[0], vectorColor[1], vectorColor[2], vectorColor[3]);
     }
 
 }
