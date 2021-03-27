@@ -4,6 +4,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+// !!! Да я знаю, что есть такие штуки как префабы. Но так как я не знаю чего хотят работодатели, то и портфолио будет содержать в себе код
+// из файла к файлу и из проекта к проекту исполненный всегда в разном стиле и разных подходах.
+// !!! Yes, I know there are things like prefabs. But since I don't know what employers want, the portfolio will also contain code from file to file
+// and from project to project, always executed in a different style and different approaches.
+
 public class Menu : MonoBehaviour
 {
 
@@ -11,6 +16,8 @@ public class Menu : MonoBehaviour
     private AudioSource clickBtn;
 
     private int currentIndexPage; // Текущий индекс текущей страницы в меню.
+    private int currentNumberOfChangedModel2D = -1; // Номер модели 2D персонажа.
+
 
     void Start()
     {
@@ -222,15 +229,19 @@ public class Menu : MonoBehaviour
         }
     }
 
-    public void Sign_Slot(int nextIndex) { // Пользователь хочет создать нового персонажа или же продолжить играть уже существующим:
+    public void Sign_Slot(int nextIndex, bool comeback = false) { // Пользователь хочет создать нового персонажа или же продолжить играть уже существующим:
 
         clickBtn.Play();
         currentIndexPage = nextIndex; // 1 или 3
 
         GameObject CreateNewCharacterBtn = GameObject.Find("CreateNewCharacter");
         GameObject IAlreadyHaveTheCharacterBtn = GameObject.Find("IAlreadyHaveTheCharacter");
-        CreateNewCharacterBtn.SetActive(false);
-        IAlreadyHaveTheCharacterBtn.SetActive(false);
+
+        if (!comeback) {
+            Destroy(CreateNewCharacterBtn);
+            Destroy(IAlreadyHaveTheCharacterBtn);
+        }
+        
 
         // Создание вложенного интерфейса:
         // Создание Заголовка:
@@ -292,7 +303,7 @@ public class Menu : MonoBehaviour
         done.layer = 5;
 
         GameObject txtDone = new GameObject(); // Создание текста для кнопки.
-        txtDone.name = "txtDone";
+        txtDone.name = "Text";
         txtDone.transform.SetParent(done.transform);
         RectTransform RTtxtDone = txtDone.AddComponent<RectTransform>();
         RTtxtDone.localScale = new Vector3(1f, 1f, 1f);
@@ -324,7 +335,7 @@ public class Menu : MonoBehaviour
         back.layer = 5;
 
         GameObject txtBack = new GameObject(); // Создание текста для кнопки.
-        txtBack.name = "txtBack";
+        txtBack.name = "Text";
         txtBack.transform.SetParent(back.transform);
         RectTransform RTtxtBack = txtBack.AddComponent<RectTransform>();
         RTtxtBack.localScale = new Vector3(1f, 1f, 1f);
@@ -419,7 +430,10 @@ public class Menu : MonoBehaviour
                         Destroy(GameObject.Find("signInputNickname"));
                         Destroy(GameObject.Find("signInputPassword"));
 
-                        MainMenu(textNick, textPass);
+                        // Также здесь будем получать из БД значение модели по данному персонажу:
+                        // currentNumberOfChangedModel2D = ...; 
+
+                        MainMenu(textNick, textPass, currentNumberOfChangedModel2D);
                     }
                     else {
                         Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
@@ -486,13 +500,371 @@ public class Menu : MonoBehaviour
 
     public void ChangeCharacterDone_Slot(string newNickname, string newPass) { // Выбор создаваемого персонажа:
 
-        // ...
+        bool isManBtnActive = false;
+        bool isWomanBtnActive = false;
 
+        // Создание Заголовка:
+        GameObject header = new GameObject("changeHeader", typeof(Text), typeof(LayoutElement));
+        header.transform.SetParent(Canvas.transform);
+        RectTransform rtHeader = header.GetComponent<RectTransform>();
+        rtHeader.localScale = new Vector3(1f, 1f, 1f);
+        rtHeader.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        rtHeader.anchorMin = new Vector2(0.5f, 1f);
+        rtHeader.anchorMax = new Vector2(0.5f, 1f);
+        rtHeader.sizeDelta = new Vector2(200f, 30f); // Set width and height
+        rtHeader.localPosition = new Vector3(0f, 0f, 0f); // Обнуляем позиции по всем осям относительно анкеров.
+        rtHeader.anchoredPosition = new Vector3(0f, -75f, 0f); // Устанавливаем позицию относительно анкеров.
+        header.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
+        header.GetComponent<Text>().fontSize = 18;
+        header.GetComponent<Text>().text = "Choose a character:";
+        header.GetComponent<Text>().font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        Outline outlineHeader = header.AddComponent<Outline>();
+        outlineHeader.effectColor = new Color(255f, 255f, 255f, 100f);
+        outlineHeader.effectDistance = new Vector2(0.2f, -0.2f);
+        header.layer = 5;
+
+        // Создание кнопок выбора мужского или женского персонажа:
+        GameObject woman = new GameObject("woman", typeof(Image), typeof(Button), typeof(LayoutElement));
+        woman.transform.SetParent(Canvas.transform);
+        RectTransform womanRT = woman.GetComponent<RectTransform>();
+        womanRT.localScale = new Vector3(1f, 1f, 1f);
+        womanRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        womanRT.sizeDelta = new Vector2(40f, 40f);
+        womanRT.anchorMin = new Vector2(0.5f, 1f);
+        womanRT.anchorMax = new Vector2(0.5f, 1f);
+        womanRT.anchoredPosition = new Vector3(-25f, -110f);
+        woman.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        woman.layer = 5;
+        Image imgWoman = woman.GetComponent<Image>();
+        imgWoman.sprite = Resources.Load("ManAndWomanButtons/SignOfWomanSprite", typeof(Sprite)) as Sprite;
+        imgWoman.color = new Color(60f / 255f, 60f / 255f, 60f / 255f, 1f);
+
+        GameObject man = new GameObject("man", typeof(Image), typeof(Button), typeof(LayoutElement));
+        man.transform.SetParent(Canvas.transform);
+        RectTransform manRT = man.GetComponent<RectTransform>();
+        manRT.localScale = new Vector3(1f, 1f, 1f);
+        manRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        manRT.sizeDelta = new Vector2(40f, 40f);
+        manRT.anchorMin = new Vector2(0.5f, 1f);
+        manRT.anchorMax = new Vector2(0.5f, 1f);
+        manRT.anchoredPosition = new Vector3(25f, -110f);
+        man.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        man.layer = 5;
+        Image imgMan = man.GetComponent<Image>();
+        imgMan.sprite = Resources.Load("ManAndWomanButtons/SignOfManSprite", typeof(Sprite)) as Sprite;
+        imgMan.color = new Color(60f / 255f, 60f / 255f, 60f / 255f, 1f);
+
+
+        // Кликабельная кнопка с картинкой:
+        GameObject pictureBtn = new GameObject("pictureBtn", typeof(Image), typeof(Button), typeof(LayoutElement));
+        pictureBtn.transform.SetParent(Canvas.transform);
+        RectTransform pictureBtnRT = pictureBtn.GetComponent<RectTransform>();
+        pictureBtnRT.localScale = new Vector3(1f, 1f, 1f);
+        pictureBtnRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        pictureBtnRT.sizeDelta = new Vector2(300f, 300f);
+        pictureBtnRT.anchorMin = new Vector2(0.5f, 1f);
+        pictureBtnRT.anchorMax = new Vector2(0.5f, 1f);
+        pictureBtnRT.anchoredPosition = new Vector3(0f, -280f);
+        pictureBtn.GetComponent<Image>().color = new Color(145f / 255f, 75f / 255f, 67f / 255f, 1f);
+        pictureBtn.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        pictureBtn.layer = 5;
+
+        Image imgPictureBtn = pictureBtn.GetComponent<Image>();
+        imgPictureBtn.color = new Color(0f, 0f, 0f, 1f);
+        pictureBtn.AddComponent<Outline>().effectColor = new Color(1f, 1f, 1f, 1f);
+        pictureBtn.GetComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+
+        // Создание кнопоки done:
+        GameObject done = new GameObject("Done", typeof(Image), typeof(Button), typeof(LayoutElement));
+        done.transform.SetParent(Canvas.transform);
+        RectTransform doneRT = done.GetComponent<RectTransform>();
+        doneRT.localScale = new Vector3(1f, 1f, 1f);
+        doneRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        doneRT.sizeDelta = new Vector2(200f, 50f);
+        doneRT.anchorMin = new Vector2(0.5f, 1f);
+        doneRT.anchorMax = new Vector2(0.5f, 1f);
+        doneRT.anchoredPosition = new Vector3(50f, -405f);
+        done.GetComponent<Image>().color = new Color(85f / 255f, 114f / 255f, 50f / 255f, 150f / 255f);
+        done.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        done.layer = 5;
+
+        GameObject txtDone = new GameObject(); // Создание текста для кнопки.
+        txtDone.name = "Text";
+        txtDone.transform.SetParent(done.transform);
+        RectTransform RTtxtDone = txtDone.AddComponent<RectTransform>();
+        RTtxtDone.localScale = new Vector3(1f, 1f, 1f);
+        RTtxtDone.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        RTtxtDone.sizeDelta = new Vector2(RTtxtDone.sizeDelta[0], 20f);
+        RTtxtDone.anchorMin = new Vector2(0f, 0.5f);
+        RTtxtDone.anchorMax = new Vector2(0f, 0.5f);
+        RTtxtDone.anchoredPosition = new Vector3(100f, 0f);
+        Text textDone = txtDone.AddComponent<Text>();
+        textDone.text = "Done";
+        textDone.color = new Color(0f, 0f, 0f, 1f);
+        textDone.fontSize = 18;
+        textDone.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        textDone.alignment = TextAnchor.MiddleCenter;
+        txtDone.layer = 5;
+
+        // Создание кнопоки back:
+        GameObject back = new GameObject("Back", typeof(Image), typeof(Button), typeof(LayoutElement));
+        back.transform.SetParent(Canvas.transform);
+        RectTransform backRT = back.GetComponent<RectTransform>();
+        backRT.localScale = new Vector3(1f, 1f, 1f);
+        backRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        backRT.sizeDelta = new Vector2(backRT.sizeDelta[0] - 5f, 50f);
+        backRT.anchorMin = new Vector2(0.5f, 1f);
+        backRT.anchorMax = new Vector2(0.5f, 1f);
+        backRT.anchoredPosition = new Vector3(-102f, -405f);
+        back.GetComponent<Image>().color = new Color(145f / 255f, 75f / 255f, 67f / 255f, 150f / 255f);
+        back.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        back.layer = 5;
+
+        GameObject txtBack = new GameObject(); // Создание текста для кнопки.
+        txtBack.name = "Text";
+        txtBack.transform.SetParent(back.transform);
+        RectTransform RTtxtBack = txtBack.AddComponent<RectTransform>();
+        RTtxtBack.localScale = new Vector3(1f, 1f, 1f);
+        RTtxtBack.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        RTtxtBack.sizeDelta = new Vector2(RTtxtBack.sizeDelta[0], 20f);
+        RTtxtBack.anchorMin = new Vector2(0f, 0.5f);
+        RTtxtBack.anchorMax = new Vector2(0f, 0.5f);
+        RTtxtBack.anchoredPosition = new Vector3(50f, 0f);
+        Text textBack = txtBack.AddComponent<Text>();
+        textBack.text = "Back";
+        textBack.color = new Color(0f, 0f, 0f, 1f);
+        textBack.fontSize = 18;
+        textBack.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        textBack.alignment = TextAnchor.MiddleCenter;
+        txtBack.layer = 5;
+
+        // Стрелка влево:
+        GameObject leftArrow = new GameObject("leftArrow", typeof(Image), typeof(Button), typeof(LayoutElement));
+        leftArrow.transform.SetParent(Canvas.transform);
+        RectTransform leftArrowRT = leftArrow.GetComponent<RectTransform>();
+        leftArrowRT.localScale = new Vector3(1f, 1f, 1f);
+        leftArrowRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        leftArrowRT.sizeDelta = new Vector2(50f, 50f);
+        leftArrowRT.anchorMin = new Vector2(0.5f, 1f);
+        leftArrowRT.anchorMax = new Vector2(0.5f, 1f);
+        leftArrowRT.anchoredPosition = new Vector3(-190f, -280f);
+        leftArrow.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        leftArrow.layer = 5;
+        Image imgleftArrow = leftArrow.GetComponent<Image>();
+        imgleftArrow.sprite = Resources.Load("LeftArrowSprite", typeof(Sprite)) as Sprite;
+        imgleftArrow.color = new Color(60f / 255f, 60f / 255f, 60f / 255f, 1f);
+
+        // Стрелка вправо:
+        GameObject rightArrow = new GameObject("rightArrow", typeof(Image), typeof(Button), typeof(LayoutElement));
+        rightArrow.transform.SetParent(Canvas.transform);
+        RectTransform rightArrowRT = rightArrow.GetComponent<RectTransform>();
+        rightArrowRT.localScale = new Vector3(1f, 1f, 1f);
+        rightArrowRT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+        rightArrowRT.sizeDelta = new Vector2(50f, 50f);
+        rightArrowRT.anchorMin = new Vector2(0.5f, 1f);
+        rightArrowRT.anchorMax = new Vector2(0.5f, 1f);
+        rightArrowRT.anchoredPosition = new Vector3(190f, -280f);
+        rightArrow.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+        rightArrow.layer = 5;
+        Image imgrightArrow = rightArrow.GetComponent<Image>();
+        imgrightArrow.sprite = Resources.Load("RightArrowSprite", typeof(Sprite)) as Sprite;
+        imgrightArrow.color = new Color(60f / 255f, 60f / 255f, 60f / 255f, 1f);
+
+        // Создаем массив с ресурсами:
+        List<Sprite> list = new List<Sprite>();
+        for (int i = 0; i < 20; ++i) {
+            if (i < 10) list.Add(Resources.Load("ManAndWomanButtons/he/heSprite_" + (i+1).ToString(), typeof(Sprite)) as Sprite);
+            else list.Add(Resources.Load("ManAndWomanButtons/she/sheSprite_" + (i+1).ToString(), typeof(Sprite)) as Sprite);
+        }
+
+
+        // ОБРАБОТЧИКИ СОБЫТИЙ:
+        man.GetComponent<Button>().onClick.AddListener(() => {
+            if (!isManBtnActive && !isWomanBtnActive) {
+                clickBtn.Play();
+                currentNumberOfChangedModel2D = 0;
+                imgMan.color = new Color(1f, 1f, 1f, 1f);
+
+                // Активируем область просмотра:
+                pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D] as Sprite;
+                pictureBtn.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+
+            }
+            else if (isManBtnActive && !isWomanBtnActive) {
+                // Nothing doing.
+            }
+            else if (!isManBtnActive && isWomanBtnActive) {
+                clickBtn.Play();
+                currentNumberOfChangedModel2D = 0;
+                imgWoman.color = new Color(60f / 255f, 60f / 255f, 60f / 255f, 1f);
+                imgMan.color = new Color(1f, 1f, 1f, 1f);
+                pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D] as Sprite;
+            }
+            isManBtnActive = true;
+            isWomanBtnActive = false;
+            imgrightArrow.color = new Color(1f, 1f, 1f, 1f);
+            imgleftArrow.color = new Color(1f, 1f, 1f, 1f);
+        });
+
+        woman.GetComponent<Button>().onClick.AddListener(() => {
+            if (!isManBtnActive && !isWomanBtnActive) {
+                clickBtn.Play();
+                currentNumberOfChangedModel2D = 10;
+                imgWoman.color = new Color(1f, 1f, 1f, 1f);
+
+                // Активируем область просмотра:
+                pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                pictureBtn.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+            }
+            else if (isManBtnActive && !isWomanBtnActive) {
+                clickBtn.Play();
+                currentNumberOfChangedModel2D = 10;
+                imgMan.color = new Color(60f / 255f, 60f / 255f, 60f / 255f, 1f);
+                imgWoman.color = new Color(1f, 1f, 1f, 1f);
+                pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D] as Sprite;
+            }
+            else if (!isManBtnActive && isWomanBtnActive) {
+                // Nothing doing.
+            }
+            isManBtnActive = false;
+            isWomanBtnActive = true;
+            imgrightArrow.color = new Color(1f, 1f, 1f, 1f);
+            imgleftArrow.color = new Color(1f, 1f, 1f, 1f);
+        });
+
+        leftArrow.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+            if (isManBtnActive) { // 1 - 10
+                switch (currentNumberOfChangedModel2D) {
+                    case 0:
+                    currentNumberOfChangedModel2D = 9;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                    default:
+                    currentNumberOfChangedModel2D--;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                }
+            }
+            else if (isWomanBtnActive) { // 11 - 20
+                switch (currentNumberOfChangedModel2D) {
+                    case 10:
+                    currentNumberOfChangedModel2D = 19;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                    default:
+                    currentNumberOfChangedModel2D--;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                }
+            }
+        });
+
+        rightArrow.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+            if (isManBtnActive) { // 1 - 10
+                switch (currentNumberOfChangedModel2D) {
+                    case 9:
+                    currentNumberOfChangedModel2D = 0;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                    default:
+                    currentNumberOfChangedModel2D++;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                }
+            }
+            else if (isWomanBtnActive) { // 11 - 20
+                switch (currentNumberOfChangedModel2D) {
+                    case 19:
+                    currentNumberOfChangedModel2D = 10;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                    default:
+                    currentNumberOfChangedModel2D++;
+                    pictureBtn.GetComponent<Image>().sprite = list[currentNumberOfChangedModel2D];
+                    break;
+                }
+            }
+        });
+
+        back.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+            currentIndexPage--;
+
+            Destroy(header);
+            Destroy(woman);
+            Destroy(man);
+            Destroy(pictureBtn);
+            Destroy(leftArrow);
+            Destroy(rightArrow);
+            Destroy(back);
+            Destroy(done);
+
+            Sign_Slot(1);
+        });
+
+        done.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+
+            // Тут будем записывать нового пользователя в БД и переходить на главное игровое меню.
+
+            // ...
+
+            Destroy(header);
+            Destroy(woman);
+            Destroy(man);
+            Destroy(pictureBtn);
+            Destroy(leftArrow);
+            Destroy(rightArrow);
+            Destroy(back);
+            Destroy(done);
+
+            MainMenu(newNickname, newPass, currentNumberOfChangedModel2D);
+        });
     }
 
-    private void MainMenu(string nickname, string password) { // Главное меню игры:
+    private void MainMenu(string nickname, string password, int numberOf2DModel) { // Главное меню игры:
+        currentIndexPage = 4;
 
-        // ...
+        bool __DEBUG__ = true;
+        if (__DEBUG__ == true) {
+            nickname = "InviZzzible";
+            password = "ksjhfskjdg2021";
+        }
+
+        // Создание UI главного меню:
+        // Создание Скролл - области, чтобы уместить все эементы UI на любой экран мобильного телефона:
+
+        // Лейбл Режим игры:
+
+        // Кнопка PVE WITH SAVES:
+
+        // Кнопка PVP FUN:
+
+        // Кнопка PVE TURNIR:
+
+        // Кнопка PVP:
+
+        // Кнопка MISSIONS:
+
+        // Лейбл Статистика:
+
+        // Кнопка PVE TOP:
+
+        // Кнопка PVP TOP:
+
+        // Черта:
+
+        // Кнопка Персонаж:
+
+        // Черта:
+
+        // Кнопка Donate:
+
+        // Кнопка Предложения по улучшению игры:
+
+        // Кнопка About:
 
     }
 
