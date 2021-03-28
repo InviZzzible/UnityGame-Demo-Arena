@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 // !!! Да я знаю, что есть такие штуки как префабы. Но так как я не знаю чего хотят работодатели, то и портфолио будет содержать в себе код
 // из файла к файлу и из проекта к проекту исполненный всегда в разном стиле и разных подходах.
@@ -807,65 +808,139 @@ public class Menu : MonoBehaviour
         done.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            // Тут будем записывать нового пользователя в БД и переходить на главное игровое меню.
+            if(isManBtnActive || isWomanBtnActive) {
+                // Тут будем записывать нового пользователя в БД и переходить на главное игровое меню.
 
-            // ...
+                // ...
 
-            Destroy(header);
-            Destroy(woman);
-            Destroy(man);
-            Destroy(pictureBtn);
-            Destroy(leftArrow);
-            Destroy(rightArrow);
-            Destroy(back);
-            Destroy(done);
+                Destroy(header);
+                Destroy(woman);
+                Destroy(man);
+                Destroy(pictureBtn);
+                Destroy(leftArrow);
+                Destroy(rightArrow);
+                Destroy(back);
+                Destroy(done);
 
-            MainMenu(newNickname, newPass, currentNumberOfChangedModel2D);
+                MainMenu(newNickname, newPass, currentNumberOfChangedModel2D);
+            }
         });
     }
 
     private void MainMenu(string nickname, string password, int numberOf2DModel) { // Главное меню игры:
         currentIndexPage = 4;
 
-        bool __DEBUG__ = true;
-        if (__DEBUG__ == true) {
-            nickname = "InviZzzible";
-            password = "ksjhfskjdg2021";
-        }
+        // Создание UI главного меню путем создания копии из подготовленного префаба:
+        GameObject mainManu_prefab = Instantiate(Resources.Load("UIPrefabs/ScrollViewOfMainMenu") as Object, Canvas.transform) as GameObject;
 
-        // Создание UI главного меню:
-        // Создание Скролл - области, чтобы уместить все эементы UI на любой экран мобильного телефона:
+        // Идентификация всех необходимых объектов вложенных в данный префаб:
+        GameObject Nickname = GameObject.Find("Nickname_Text");
+        GameObject pveWithSaving = GameObject.Find("pveWithSavingBtn");
+        GameObject pveTurnir = GameObject.Find("pveTurnirBtn");
+        GameObject pvp = GameObject.Find("pvpBtn");
+        GameObject pveTop = GameObject.Find("pveTopBtn");
+        GameObject pvpTop = GameObject.Find("pvpTopBtn");
+        GameObject character = GameObject.Find("characterBtn");
+        GameObject store = GameObject.Find("storeBtn");
+        GameObject about = GameObject.Find("aboutBtn");
+        
+        // Инициализация записи с никнеймом:
+        Nickname.GetComponent<Text>().text = nickname;
+        
+        // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ ВСЕХ КНОПОК В ГЛАВНОМ МЕНЮ:
+        pveWithSaving.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
 
-        // Лейбл Режим игры:
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
 
-        // Кнопка PVE WITH SAVES:
+            // Получаем из БД информацию о максимально достигнутом ранее уровне:
 
-        // Кнопка PVP FUN:
+            // ...
 
-        // Кнопка PVE TURNIR:
+            // Если уровень не 0, то Переходим на подменю с выбором уровня:
 
-        // Кнопка PVP:
+            // ...
 
-        // Кнопка MISSIONS:
+            // А если уровень 0, то запускаем нулевую сцену:
+            SceneManager.LoadScene(1);
 
-        // Лейбл Статистика:
+        });
+        
+        pveTurnir.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
 
-        // Кнопка PVE TOP:
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
 
-        // Кнопка PVP TOP:
+            // Запускаем нулевую сцену:
+            SceneManager.LoadScene(1);
 
-        // Черта:
+        });
 
-        // Кнопка Персонаж:
+        pvp.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
 
-        // Черта:
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
 
-        // Кнопка Donate:
+            // Загружаем префаб с подменю:
 
-        // Кнопка Предложения по улучшению игры:
+            // ...
 
-        // Кнопка About:
+        });
 
+        pveTop.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
+
+            // Загружаем префаб с подменю:
+
+            // ...
+
+        });
+
+        pvpTop.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
+
+            // Загружаем префаб с подменю:
+
+            // ...
+
+        });
+
+        character.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
+
+            // Загружаем префаб с подменю:
+
+            // ...
+
+        });
+
+        store.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
+
+            // Загружаем префаб с подменю:
+
+            // ...
+
+        });
+
+        about.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+
+            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
+
+            // Загружаем префаб с подменю:
+
+            // ...
+
+        });
     }
 
     IEnumerator SetTimeoutChangeColor(float sec, Vector4 vectorColor, string name, string name2 = "") {
