@@ -4,11 +4,62 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.IO;
+using System.Linq;
 
-// !!! Да я знаю, что есть такие штуки как префабы. Но так как я не знаю чего хотят работодатели, то и портфолио будет содержать в себе код
-// из файла к файлу и из проекта к проекту исполненный всегда в разном стиле и разных подходах.
-// !!! Yes, I know there are things like prefabs. But since I don't know what employers want, the portfolio will also contain code from file to file
-// and from project to project, always executed in a different style and different approaches.
+// Классы, необходимый для создания объектов, которые будут конвертироваться в json и 
+// обратно для записи/чтения данных в локальном пространстве устройства:
+[System.Serializable]
+public class ArrayCharacterInfo {               
+    public List<CharacterInfo> list = new List<CharacterInfo>();
+}
+
+[System.Serializable]
+public class CharacterInfo {
+    public string Nickname = "";
+    public string Password = "";
+    public string LeftHand = "";
+    public string RightHand = "";
+    public string LeftFoot = "";
+    public string RightFoot = "";
+    public string ActionSlot_01 = "";
+    public string ActionSlot_02 = "";
+    public string ActionSlot_03 = "";
+    public string ActionSlot_04 = "";
+    public string ActionSlot_05 = "";
+    public bool isActualCharacter = false;
+}
+
+// ---------------------------------------------------------------------------
+
+// Класс для проверки существования файла, для записи и для чтения файла:
+public class RecordAndReadFile {
+    public static string fileName = "CharacterInfo.info";
+    private string path;
+    public RecordAndReadFile(string path) {
+#if !UNITY_EDITOR
+    this.path = Path.Combine(Application.persistentDataPath, path);
+#else
+        this.path = Path.Combine(Application.dataPath, path);
+#endif
+    }
+
+    public bool FileExists() {
+        return File.Exists(path);
+    }
+
+    public void RecordInFile(ArrayCharacterInfo obj) {
+        string toJson = JsonUtility.ToJson(obj, true);
+        File.WriteAllText(path, toJson);
+    }
+
+    public ArrayCharacterInfo ReadFromFile() {
+        string fromjson = File.ReadAllText(path);
+        return JsonUtility.FromJson<ArrayCharacterInfo>(fromjson);
+    }
+}
+// ---------------------------------------------------------------------------
+
 
 public class Menu : MonoBehaviour
 {
@@ -19,11 +70,15 @@ public class Menu : MonoBehaviour
     private int currentIndexPage; // Текущий индекс текущей страницы в меню.
     private int currentNumberOfChangedModel2D = -1; // Номер модели 2D персонажа.
 
+    
 
     void Start()
     {
         Canvas = GameObject.Find("Canvas");
         clickBtn = GameObject.Find("ClickBtn").GetComponent<AudioSource>();
+
+        // Проверяем, существует ли файл
+
         startPageUI();
     }
 
@@ -230,11 +285,12 @@ public class Menu : MonoBehaviour
         }
     }
 
-    public void Sign_Slot(int nextIndex, bool comeback = false) { // Пользователь хочет создать нового персонажа или же продолжить играть уже существующим:
+    public void Sign_Slot(int nextIndex, bool comeback = false, string nicknameComeBack = "", string passwordComeBack = "") { // Пользователь хочет создать нового персонажа или же продолжить играть уже существующим:
 
         clickBtn.Play();
         currentIndexPage = nextIndex; // 1 или 3
 
+        /*
         GameObject CreateNewCharacterBtn = GameObject.Find("CreateNewCharacter");
         GameObject IAlreadyHaveTheCharacterBtn = GameObject.Find("IAlreadyHaveTheCharacter");
 
@@ -242,7 +298,7 @@ public class Menu : MonoBehaviour
             Destroy(CreateNewCharacterBtn);
             Destroy(IAlreadyHaveTheCharacterBtn);
         }
-        
+        */
 
         // Создание вложенного интерфейса:
         // Создание Заголовка:
@@ -368,6 +424,33 @@ public class Menu : MonoBehaviour
         look.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
         look.layer = 5;
 
+        if(currentIndexPage == 3) { // Если пытаемся зайти в одну из ранее созданных учеток, то имеет смысл
+            // подставить в поля ввода данные из последней играбельной (далее по тексту актуальной) учетки:
+            // Проверяем, есть ли файл CharacterInfo существует, то загружаем информацию о логине, пароле и т.д. и подставляем в поля:
+            RecordAndReadFile file = new RecordAndReadFile(RecordAndReadFile.fileName);
+            if (file.FileExists()) {
+                // Читаем файл:
+                ArrayCharacterInfo obj = file.ReadFromFile();
+                if(obj != null) {
+                    // Поиск актуальной записи - та запись у которой isActualCharacter == true является актуальной:
+                    List<CharacterInfo> chInfo = (from rec in obj.list
+                                                  where rec.isActualCharacter == true
+                                                  select rec).ToList();
+
+                    if (chInfo != null && chInfo.Count != 0) {
+                        // Записываем данные в input поля:
+                        GameObject.Find("signInputNickname").GetComponent<InputField>().text = chInfo[0].Nickname;
+                        GameObject.Find("signInputPassword").GetComponent<InputField>().text = chInfo[0].Password;
+                    }
+                }
+            }
+        }
+        else if(currentIndexPage == 1 && comeback) { // Есл мы возвращаемся в это меню для создания перса из меню выбора перса, то тоже есть смысл
+                                                     // показать логин и пароль пользователю:
+            // Записываем данные в input поля:
+            GameObject.Find("signInputNickname").GetComponent<InputField>().text = nicknameComeBack;
+            GameObject.Find("signInputPassword").GetComponent<InputField>().text = passwordComeBack;
+        }
 
         // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ КНОПОК:
         // Обработчик события на нажатие кнопки Look:
@@ -383,7 +466,6 @@ public class Menu : MonoBehaviour
                 look.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
             }
             EventSystem.current.SetSelectedGameObject(inputF.gameObject, null); // Устанавливаем фокус.
-
         });
 
         // Обработчик события на нажатие кнопки Done:
@@ -395,52 +477,171 @@ public class Menu : MonoBehaviour
 
             if (textNick != "" && textPass != "") {
                 if (currentIndexPage == 1) {
-                    if (true /* Здесь будем проверять уникальность введенного ника в БД и если ник уникален тогда запускаем функцию:  */) {
-                        currentIndexPage = 2;
 
-                        // Удаляем ненужные объекты текущей страницы:
-                        Destroy(header);
-                        Destroy(description);
-                        Destroy(back);
-                        Destroy(done);
-                        Destroy(look);
-                        Destroy(GameObject.Find("signInputNickname"));
-                        Destroy(GameObject.Find("signInputPassword"));
+                    // Чтобы не задрачивать удаленный сервер, сначала проверим является ли придуманный ник
+                    // уникальным в локальных данных пользователя:
 
-                        ChangeCharacterDone_Slot(textNick, textPass); // Переходим к выбору персонажа...
+                    bool uniqFile = false;
+                    RecordAndReadFile file = new RecordAndReadFile(RecordAndReadFile.fileName);
+                    if (file.FileExists()) {
+                        // Читаем файл:
+                        ArrayCharacterInfo obj = file.ReadFromFile();
+
+                        int count = obj.list.Where(x => x.Nickname == textNick).Select(x => x).Count();
+
+                        if(count == 0) { // Ник является уникальным в локальной среде
+                            uniqFile = true;
+                        }
                     }
-                    else { // Если нет, тогда остаемся на этой же странице, указывая пользователю, что его ник не уникален:
+                    else uniqFile = true;
+
+
+                    if (uniqFile) {
+                        if(true /* Здесь будем проверять уникальность введенного ника в БД и если ник уникален тогда запускаем функцию:  */) {
+                            currentIndexPage = 2;
+
+                            // Создаем объект с актуальной информацией об учетной записи и персонаже:
+                            CharacterInfo newRecord = new CharacterInfo();
+                            newRecord.Nickname = GameObject.Find("signInputNickname").GetComponent<InputField>().text;
+                            newRecord.Password = GameObject.Find("signInputPassword").GetComponent<InputField>().text;
+                            newRecord.isActualCharacter = true;
+
+                            // Обнуляем актуальность последней сессии и делаем актуальной текущую:
+                            file = new RecordAndReadFile(RecordAndReadFile.fileName);
+                            if (file.FileExists()) {
+                                // Читаем файл:
+                                ArrayCharacterInfo obj = file.ReadFromFile();
+
+                                // Поиск актуальной записи - та запись у которой isActive == true является актуальной:
+                                List<CharacterInfo> chInfo = (from rec in obj.list
+                                                              select rec).ToList();
+                                
+                                if(chInfo != null) {
+                                    foreach (var iterator in chInfo) { // Обнуляем актуальность предудущих сессии:
+                                        iterator.isActualCharacter = false;
+                                    }
+                                }
+                            }
+                            else { // Если же не существует, то создаем новый файл:
+
+                                ArrayCharacterInfo newArrayObj = new ArrayCharacterInfo();
+                                newArrayObj.list.Add(newRecord);
+                            }
+
+
+
+                            // Удаляем ненужные объекты текущей страницы:
+                            Destroy(header);
+                            Destroy(description);
+                            Destroy(back);
+                            Destroy(done);
+                            Destroy(look);
+                            Destroy(GameObject.Find("signInputNickname"));
+                            Destroy(GameObject.Find("signInputPassword"));
+
+                            ChangeCharacterDone_Slot(newRecord); // Переходим к выбору персонажа...
+                        }
+                        else {
+                            Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
+                            StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                            MessageOfError("The nickname you entered is not unique !", -120f);
+                            StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                        }
+                    }
+                    else { // Если нет, тогда остаемся на этой же странице, указывая пользователю, что такой ник не является уникальным:
                         Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
                         StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f/255f), "signInputNickname", "Border"));
-
                         MessageOfError("The nickname you entered is not unique !", -120f);
                         StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
                     }
 
                 }
                 else if (currentIndexPage == 3) {
-                    if (true /* Здесь будем проверять существует ли такая запись в БД и если да, то проходим в основное меню игры  */) { // !!!!!!!!!!!!!!!!!!!!
-                        currentIndexPage = 4;
 
-                        // Удаляем ненужные объекты текущей страницы:
-                        Destroy(header);
-                        Destroy(description);
-                        Destroy(back);
-                        Destroy(done);
-                        Destroy(look);
-                        Destroy(GameObject.Find("signInputNickname"));
-                        Destroy(GameObject.Find("signInputPassword"));
+                    // Чтобы не задрачивать удаленный сервер, сначала проверим есть ли такой никнейм в локальном пространстве пользователя:
+                    bool uniqFile = false;
+                    RecordAndReadFile file = new RecordAndReadFile(RecordAndReadFile.fileName);
+                    if (file.FileExists()) {
+                        // Читаем файл:
+                        ArrayCharacterInfo obj = file.ReadFromFile();
 
-                        // Также здесь будем получать из БД значение модели по данному персонажу:
-                        // currentNumberOfChangedModel2D = ...; 
+                        int count = obj.list.Where(x => x.Nickname == textNick).Select(x => x).Count();
 
-                        MainMenu(textNick, textPass, currentNumberOfChangedModel2D);
+                        if (count == 0) { // Ник является уникальным в локальной среде, что не допустимо
+                            uniqFile = true;
+                        }
+                    }
+                    else uniqFile = true;
+
+                    if (!uniqFile) {
+                        if (true /* Здесь будем проверять существует ли такая запись в БД и если да, то проходим в основное меню игры  */) { // !!!!!!!!!!!!!!!!!!!!
+                            currentIndexPage = 4;
+
+                            // Создаем объект с актуальной информацией об учетной записи и персонаже:
+                            CharacterInfo newRecord = new CharacterInfo();
+                            newRecord.Nickname = GameObject.Find("signInputNickname").GetComponent<InputField>().text;
+                            newRecord.Password = GameObject.Find("signInputPassword").GetComponent<InputField>().text;
+                            newRecord.isActualCharacter = true;
+
+                            // Обнуляем актуальность последней сессии и делаем актуальной текущую:
+                            file = new RecordAndReadFile(RecordAndReadFile.fileName);
+                            if (file.FileExists()) {
+                                // Читаем файл:
+                                ArrayCharacterInfo obj = file.ReadFromFile();
+
+                                // Поиск актуальной записи - та запись у которой isActive == true является актуальной:
+                                List<CharacterInfo> chInfo = (from rec in obj.list
+                                                              select rec).ToList();
+                                if(chInfo != null) {
+                                    foreach (var iterator in chInfo) { // Обнуляем актуальность предудущей сессии:
+                                        if(iterator.Nickname == newRecord.Nickname) iterator.isActualCharacter = true;
+                                        else iterator.isActualCharacter = false;
+                                    }
+                                }
+                                
+
+                                // Перезаписываем локальный файл:
+                                file.RecordInFile(obj);
+
+
+                                // Записываем данные в input поля:
+                                GameObject.Find("signInputNickname").GetComponent<InputField>().text = chInfo[0].Nickname;
+                                GameObject.Find("signInputPassword").GetComponent<InputField>().text = chInfo[0].Password;
+                            }
+                            else { // Если же не существует, то создаем новый файл: (На случай случайного его удаления)
+
+                                ArrayCharacterInfo newArrayObj = new ArrayCharacterInfo();
+                                newArrayObj.list.Add(newRecord);
+
+                                // Перезаписываем локальный файл:
+                                file.RecordInFile(newArrayObj);
+                            }
+
+                            // Удаляем ненужные объекты текущей страницы:
+                            Destroy(header);
+                            Destroy(description);
+                            Destroy(back);
+                            Destroy(done);
+                            Destroy(look);
+                            Destroy(GameObject.Find("signInputNickname"));
+                            Destroy(GameObject.Find("signInputPassword"));
+
+                            // Также здесь будем получать из БД значение модели по данному персонажу:
+                            // currentNumberOfChangedModel2D = ...; 
+
+                            MainMenu(newRecord, currentNumberOfChangedModel2D);
+                        }
+                        else {
+                            Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
+                            StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                            MessageOfError("Account with nickname " + textNick + " does not exist !", -120f);
+                            StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
+                        }
                     }
                     else {
                         Canvas.transform.Find("signInputNickname").gameObject.transform.Find("Border").gameObject.GetComponent<Image>().color = new Color(90f / 255, 20f / 255f, 20f / 255f, 1f);
                         StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
-
-                        MessageOfError("Account with nickname " + textNick + " does not exist !", -120f);
+                        MessageOfError("You have not created a post with this nickname before !", -120f);
                         StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
                     }
                 }
@@ -499,7 +700,7 @@ public class Menu : MonoBehaviour
         Destroy(err, 3f);
     }
 
-    public void ChangeCharacterDone_Slot(string newNickname, string newPass) { // Выбор создаваемого персонажа:
+    public void ChangeCharacterDone_Slot(CharacterInfo newRecord) { // Выбор создаваемого персонажа:
 
         bool isManBtnActive = false;
         bool isWomanBtnActive = false;
@@ -802,7 +1003,7 @@ public class Menu : MonoBehaviour
             Destroy(back);
             Destroy(done);
 
-            Sign_Slot(1);
+            Sign_Slot(1, true, newRecord.Nickname, newRecord.Password);
         });
 
         done.GetComponent<Button>().onClick.AddListener(() => {
@@ -813,6 +1014,43 @@ public class Menu : MonoBehaviour
 
                 // ...
 
+
+
+
+
+
+                // Проверяем, есть ли файл CharacterInfo существует, то необходимо обнулить актуальность последней сессии:
+                RecordAndReadFile file = new RecordAndReadFile(RecordAndReadFile.fileName);
+                if (file.FileExists()) {
+                    // Читаем файл:
+                    ArrayCharacterInfo obj = file.ReadFromFile();
+
+                    // Поиск актуальной записи - та запись у которой isActive == true является актуальной:
+                    List<CharacterInfo> chInfo = (from rec in obj.list
+                                                  select rec).ToList();
+                    if(chInfo != null) {
+                        foreach (var iterator in chInfo) { // Обнуляем актуальность предудущей сессии:
+                            iterator.isActualCharacter = false;
+                        }
+                    }
+                    
+
+
+                    // Так как мы находимся на стадии создания персонажа, то добавляем новый элемент к списку всех учеток:
+                    obj.list.Add(newRecord);
+
+                    // Перезаписываем локальный файл:
+                    file.RecordInFile(obj);
+                }
+                else { // Если же не существует, то создаем новый файл:
+                    ArrayCharacterInfo newArrayObj = new ArrayCharacterInfo();
+                    newArrayObj.list.Add(newRecord);
+
+                    // Перезаписываем локальный файл:
+                    file.RecordInFile(newArrayObj);
+                }
+
+
                 Destroy(header);
                 Destroy(woman);
                 Destroy(man);
@@ -822,12 +1060,12 @@ public class Menu : MonoBehaviour
                 Destroy(back);
                 Destroy(done);
 
-                MainMenu(newNickname, newPass, currentNumberOfChangedModel2D);
+                MainMenu(newRecord, currentNumberOfChangedModel2D);
             }
         });
     }
 
-    private void MainMenu(string nickname, string password, int numberOf2DModel) { // Главное меню игры:
+    private void MainMenu(CharacterInfo chInfo, int numberOf2DModel) { // Главное меню игры:
         currentIndexPage = 4;
 
         // Создание UI главного меню путем создания копии из подготовленного префаба:
@@ -844,9 +1082,13 @@ public class Menu : MonoBehaviour
         GameObject store = GameObject.Find("storeBtn");
         GameObject about = GameObject.Find("aboutBtn");
         
+
+        // GameObject Nickname = mainManu_prefab.transform.Find("Viewport/Content/VerticalLayout/Nickname_Text").gameObject;
+
+
         // Инициализация записи с никнеймом:
-        Nickname.GetComponent<Text>().text = nickname;
-        
+        Nickname.GetComponent<Text>().text = chInfo.Nickname;
+        /*
         // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ ВСЕХ КНОПОК В ГЛАВНОМ МЕНЮ:
         pveWithSaving.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
@@ -941,12 +1183,13 @@ public class Menu : MonoBehaviour
             // ...
 
         });
+        */
     }
 
     IEnumerator SetTimeoutChangeColor(float sec, Vector4 vectorColor, string name, string name2 = "") {
         yield return new WaitForSeconds(sec);
         
-        Canvas.transform.Find(name).gameObject.transform.Find(name2).gameObject.GetComponent<Image>().color =
+        Canvas.transform.Find(name).Find(name2).gameObject.GetComponent<Image>().color =
             new Color(vectorColor[0], vectorColor[1], vectorColor[2], vectorColor[3]);
     }
 
