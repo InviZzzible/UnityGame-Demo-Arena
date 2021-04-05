@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine.Networking;
+using System;
 
 
 // Классы, необходимый для создания объектов, которые будут конвертироваться в json и 
@@ -267,11 +268,137 @@ public class Menu : MonoBehaviour
                 MainMenu();
             }
         }
+        else if(statusOfWaiting == "PveIndex") {
+            int IndexScene = Convert.ToInt32(hidden.SH.Decipher(json));
 
+            if(IndexScene == 1) {
+                GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
+                
+                // Запускаем нулевую сцену:
+                SceneManager.LoadScene(1);
+            }
+            else {
+                // Если индекс текущей сцены не равен 1, тогда переходим в подменю с выбором о
+                // продолжении прохождения турнира или же о прохождении его с самого начала:
 
+                GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
 
+                // Создание кнопок выбора:
+                GameObject change_01 = new GameObject("change_01", typeof(Image), typeof(Button), typeof(LayoutElement));
+                change_01.transform.SetParent(Canvas.transform);
+                RectTransform change_01RT = change_01.GetComponent<RectTransform>();
+                change_01RT.localScale = new Vector3(1f, 1f, 1f);
+                change_01RT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+                change_01RT.sizeDelta = new Vector2(250f, 100f);
+                change_01RT.anchorMin = new Vector2(0.5f, 0.5f);
+                change_01RT.anchorMax = new Vector2(0.5f, 0.5f);
+                change_01RT.anchoredPosition = new Vector3(0f, 70f);
+                change_01.GetComponent<Image>().color = new Color(10f / 255f, 10f / 255f, 10f / 255f, 200f / 255f);
+                change_01.AddComponent<Outline>().effectColor = new Color(1f, 1f, 1f, 1f);
+                change_01.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+                change_01.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+                change_01.layer = 5;
+
+                GameObject txtChange_01 = new GameObject(); // Создание текста для кнопки.
+                txtChange_01.name = "Text";
+                txtChange_01.transform.SetParent(change_01.transform);
+                RectTransform RTtxtChange_01 = txtChange_01.AddComponent<RectTransform>();
+                RTtxtChange_01.localScale = new Vector3(1f, 1f, 1f);
+                RTtxtChange_01.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+                RTtxtChange_01.sizeDelta = new Vector2(250f, 20f);
+                RTtxtChange_01.anchorMin = new Vector2(0.5f, 0.5f);
+                RTtxtChange_01.anchorMax = new Vector2(0.5f, 0.5f);
+                RTtxtChange_01.anchoredPosition = new Vector3(0f, 0f);
+                Text textnewCharacter = txtChange_01.AddComponent<Text>();
+                textnewCharacter.text = "Continue tournament...";
+                textnewCharacter.color = new Color(1f, 1f, 1f, 1f);
+                textnewCharacter.fontSize = 16;
+                textnewCharacter.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+                textnewCharacter.alignment = TextAnchor.MiddleCenter;
+                txtChange_01.layer = 5;
+
+                GameObject change_02 = new GameObject("change_02", typeof(Image), typeof(Button), typeof(LayoutElement));
+                change_02.transform.SetParent(Canvas.transform);
+                RectTransform change_02RT = change_02.GetComponent<RectTransform>();
+                change_02RT.localScale = new Vector3(1f, 1f, 1f);
+                change_02RT.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+                change_02RT.sizeDelta = new Vector2(250f, 100f);
+                change_02RT.anchorMin = new Vector2(0.5f, 0.5f);
+                change_02RT.anchorMax = new Vector2(0.5f, 0.5f);
+                change_02RT.anchoredPosition = new Vector3(0f, -70f);
+                change_02.GetComponent<Image>().color = new Color(10f / 255f, 10f / 255f, 10f / 255f, 200f / 255f);
+                change_02.AddComponent<Outline>().effectColor = new Color(1f, 1f, 1f, 1f);
+                change_02.AddComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+                change_02.GetComponent<Button>().transition = Selectable.Transition.ColorTint;
+                change_02.layer = 5;
+
+                GameObject txtchange_02 = new GameObject(); // Создание текста для кнопки.
+                txtchange_02.name = "Text";
+                txtchange_02.transform.SetParent(change_02.transform);
+                RectTransform RTtxtchange_02 = txtchange_02.AddComponent<RectTransform>();
+                RTtxtchange_02.localScale = new Vector3(1f, 1f, 1f);
+                RTtxtchange_02.localRotation = new Quaternion(0f, 0f, 0f, 0f);
+                RTtxtchange_02.sizeDelta = new Vector2(250f, 20f);
+                RTtxtchange_02.anchorMin = new Vector2(0.5f, 0.5f);
+                RTtxtchange_02.anchorMax = new Vector2(0.5f, 0.5f);
+                RTtxtchange_02.anchoredPosition = new Vector3(0f, 0f);
+                Text textchange_02 = txtchange_02.AddComponent<Text>();
+                textchange_02.text = "Start tournament...";
+                textchange_02.color = new Color(1f, 1f, 1f, 1f);
+                textchange_02.fontSize = 16;
+                textchange_02.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+                textchange_02.alignment = TextAnchor.MiddleCenter;
+                txtchange_02.layer = 5;
+
+                // Обработчики событий для кнопок:
+                change_01.GetComponent<Button>().onClick.AddListener(() => { // Продолжить турнир !!!
+                    clickBtn.Play();
+
+                    Destroy(change_01);
+                    Destroy(change_02);
+
+                    // Запускаем актуальную сцену:
+                    SceneManager.LoadScene(IndexScene);
+                });
+                change_02.GetComponent<Button>().onClick.AddListener(() => { // Начать турнир сначала !!!
+                    clickBtn.Play();
+
+                    Destroy(change_01);
+                    Destroy(change_02);
+
+                    StaticClasses.TransitsData.transitPveCurrentLevel = 1; // Сброс индекса сцен.
+                    StaticClasses.TransitsData.transitPveCurrentScore = 0; // Сброс счета.
+                    // Запускаем нулевую сцену:
+                    SceneManager.LoadScene(1);
+                });
+
+            }
+        }
+        else if (statusOfWaiting == "PveTopDatas") {
+            GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
+            // Загружаем префаб с подменю:
+
+            // ...
+        }
+        else if (statusOfWaiting == "PveTopDatas") {
+            GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
+            // Загружаем префаб с подменю:
+
+            // ...
+        }
+        else if (statusOfWaiting == "CharactersInformation") {
+            GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
+            // Загружаем префаб с подменю:
+
+            // ...
+        }
+        else if (statusOfWaiting == "StoreList") {
+            GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
+            // Загружаем префаб с подменю:
+
+            // ...
+        }
         // ...
-
 
 
         statusOfWaiting = "";
@@ -1119,15 +1246,14 @@ public class Menu : MonoBehaviour
         
         // Создание UI главного меню путем создания копии из подготовленного префаба:
         GameObject mainManu_prefab = Instantiate(Resources.Load("UIPrefabs/ScrollViewOfMainMenu") as Object, Canvas.transform) as GameObject;
-
+        mainManu_prefab.name = "mainMenu";
         // Идентификация всех необходимых объектов вложенных в данный префаб:
         GameObject Nickname = GameObject.Find("Nickname_Text");
-        GameObject pveWithSaving = GameObject.Find("pveWithSavingBtn");
-        GameObject pveTurnir = GameObject.Find("pveTurnirBtn");
+        GameObject pve = GameObject.Find("pveBtn");
         GameObject pvp = GameObject.Find("pvpBtn");
         GameObject pveTop = GameObject.Find("pveTopBtn");
         GameObject pvpTop = GameObject.Find("pvpTopBtn");
-        GameObject character = GameObject.Find("characterBtn");
+        GameObject character = GameObject.Find("characterBtn"); // Характеристики и вещи.
         GameObject store = GameObject.Find("storeBtn");
         GameObject about = GameObject.Find("aboutBtn");
 
@@ -1136,32 +1262,12 @@ public class Menu : MonoBehaviour
         Nickname.GetComponent<Text>().text = chInfo.Nickname;
         
         // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ ВСЕХ КНОПОК В ГЛАВНОМ МЕНЮ:
-        pveWithSaving.GetComponent<Button>().onClick.AddListener(() => {
+        pve.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
-
-            // Получаем из БД информацию о максимально достигнутом ранее уровне:
-
-            // ...
-
-            // Если уровень не 0, то Переходим на подменю с выбором уровня:
-
-            // ...
-
-            // А если уровень 0, то запускаем нулевую сцену:
-            SceneManager.LoadScene(1);
-
-        });
-        
-        pveTurnir.GetComponent<Button>().onClick.AddListener(() => {
-            clickBtn.Play();
-
-            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
-
-            // Запускаем нулевую сцену:
-            SceneManager.LoadScene(1);
-
+            // Получаем индекс стартовой сцены:
+            httpRequest.POST("PveIndex|" + chInfo.Nickname + "|" + chInfo.Password);
+            statusOfWaiting = "PveIndex";
         });
 
         pvp.GetComponent<Button>().onClick.AddListener(() => {
@@ -1178,45 +1284,38 @@ public class Menu : MonoBehaviour
         pveTop.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
-
-            // Загружаем префаб с подменю:
-
-            // ...
-
+            // Запрос на получение данных о списке лучших игроков в режиме PVE:
+            httpRequest.POST("PveTopDatas|" + chInfo.Nickname + "|" + chInfo.Password);
+            statusOfWaiting = "PveTopDatas";
         });
 
         pvpTop.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
-
-            // Загружаем префаб с подменю:
-
-            // ...
-
+            // Запрос на получение данных о списке лучших игроков в режиме PVP:
+            httpRequest.POST("PveTopDatas|" + chInfo.Nickname + "|" + chInfo.Password);
+            statusOfWaiting = "PveTopDatas";
         });
 
         character.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
-
-            // Загружаем префаб с подменю:
-
-            // ...
-
+            // Запрос на получение данных об:
+                // -- Максимальное здоровье
+                // -- Максимальная мана *
+                // -- Сила
+                // -- Наличие всех имеющихся предметов включая золото
+                // -- Наличие оружия взятого в руке
+                // -- Достижения персонажа: текущий скор, максимальный, уровень в пве, кол-во побед и поражений.
+            httpRequest.POST("CharactersInformation|" + chInfo.Nickname + "|" + chInfo.Password);
+            statusOfWaiting = "CharactersInformation";
         });
 
         store.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
-
-            // Загружаем префаб с подменю:
-
-            // ...
-
+            httpRequest.POST("StoreList|" + chInfo.Nickname + "|" + chInfo.Password);
+            statusOfWaiting = "StoreList";
         });
 
         about.GetComponent<Button>().onClick.AddListener(() => {
