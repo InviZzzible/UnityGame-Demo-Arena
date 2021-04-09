@@ -95,7 +95,7 @@ public class Menu : MonoBehaviour
 
     // Обработчик событий на тикие простые события как проверка уникальности ника, существования учетки и создания уч.:
     protected void Checking(string json) {
-        if (statusOfWaiting == "CkeckOnUniqNickname") {
+        if (statusOfWaiting == "CkeckOnUniqNickname") { // ++
 
             string Answer = hidden.SH.Decipher(json); // true / false
 
@@ -150,7 +150,7 @@ public class Menu : MonoBehaviour
                 StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
             }
         }
-        else if (statusOfWaiting == "CheckOnExistingSuchNickname") {
+        else if (statusOfWaiting == "CheckOnExistingSuchNickname") { // +++
 
             string Answer = hidden.SH.Decipher(json); // true / false
 
@@ -219,7 +219,7 @@ public class Menu : MonoBehaviour
                 StartCoroutine(SetTimeoutChangeColor(3f, new Vector4(50f / 255f, 50f / 255f, 50f / 255f, 100f / 255f), "signInputNickname", "Border"));
             }
         }
-        else if (statusOfWaiting == "Create_character") {
+        else if (statusOfWaiting == "Create_character") { // +++
 
             // Просто ожидаем ответ от сервера, для продолжения работы...
             string Answer = hidden.SH.Decipher(json); // true
@@ -268,7 +268,7 @@ public class Menu : MonoBehaviour
                 MainMenu();
             }
         }
-        else if(statusOfWaiting == "PveIndex") {
+        else if(statusOfWaiting == "PveIndex") { // Получаем индекс стартовой сцены:
             int IndexScene = Convert.ToInt32(hidden.SH.Decipher(json));
 
             if(IndexScene == 1) {
@@ -374,25 +374,25 @@ public class Menu : MonoBehaviour
 
             }
         }
-        else if (statusOfWaiting == "PveTopDatas") {
+        else if (statusOfWaiting == "PveTopDatas") { // Получить список топа pve:
             GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
             // Загружаем префаб с подменю:
 
             // ...
         }
-        else if (statusOfWaiting == "PveTopDatas") {
+        else if (statusOfWaiting == "PvpTopDatas") { // Получиться список топа pvp:
             GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
             // Загружаем префаб с подменю:
 
             // ...
         }
-        else if (statusOfWaiting == "CharactersInformation") {
+        else if (statusOfWaiting == "CharactersInformation") { // Получаем все достежения по персонажу:
             GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
             // Загружаем префаб с подменю:
 
             // ...
         }
-        else if (statusOfWaiting == "StoreList") {
+        else if (statusOfWaiting == "StoreList") { // Получаем список всех продаваемых товаров:
             GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
             // Загружаем префаб с подменю:
 
@@ -1293,8 +1293,8 @@ public class Menu : MonoBehaviour
             clickBtn.Play();
 
             // Запрос на получение данных о списке лучших игроков в режиме PVP:
-            httpRequest.POST("PveTopDatas|" + chInfo.Nickname + "|" + chInfo.Password);
-            statusOfWaiting = "PveTopDatas";
+            httpRequest.POST("PvpTopDatas|" + chInfo.Nickname + "|" + chInfo.Password);
+            statusOfWaiting = "PvpTopDatas";
         });
 
         character.GetComponent<Button>().onClick.AddListener(() => {
@@ -1312,6 +1312,7 @@ public class Menu : MonoBehaviour
         });
 
         store.GetComponent<Button>().onClick.AddListener(() => {
+            // Отправляем запрос на получение списка всех товаров для продажи:
             clickBtn.Play();
 
             httpRequest.POST("StoreList|" + chInfo.Nickname + "|" + chInfo.Password);
