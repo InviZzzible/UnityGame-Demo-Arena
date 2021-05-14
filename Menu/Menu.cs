@@ -56,7 +56,6 @@ public class RecordAndReadFile {
 }
 // ---------------------------------------------------------------------------
 
-
 public class Menu : MonoBehaviour
 {
 
@@ -463,7 +462,7 @@ public class Menu : MonoBehaviour
 
             // ...
         }
-        else if (statusOfWaiting == "CharactersInformation") { // Получаем все достежения по персонажу:
+        else if (statusOfWaiting == "InventoryInfo") { // Получаем все достежения по персонажу:
             GameObject.Find("mainMenu").SetActive(false); // Делаем главное меню временно не активным.
             // Загружаем префаб с подменю:
 
@@ -497,9 +496,10 @@ public class Menu : MonoBehaviour
         RTStarnMenu.offsetMax = new Vector2(1f, 1f);
         RTStarnMenu.transform.localPosition = Vector3.zero;
 
-        GameObject newCharacter, haveCharacter, deleteCharacter;
+        GameObject newCharacter, haveCharacter, deleteCharacter, iamGuest;
         newCharacter = startMenu.transform.Find("CreateNewCharacter").gameObject;
         haveCharacter = startMenu.transform.Find("IAlreadyHaveTheCharacter").gameObject;
+        iamGuest = startMenu.transform.Find("IamGuest").gameObject;
         deleteCharacter = startMenu.transform.Find("IWantToDeleteCharacter").gameObject;
 
         newCharacter.transform.Find("Text").GetComponent<Text>().text =
@@ -507,6 +507,9 @@ public class Menu : MonoBehaviour
 
         haveCharacter.transform.Find("Text").GetComponent<Text>().text =
                                                 (Language == "En") ? "I already have the character..." : "У меня уже есть персонаж...";
+
+        iamGuest.transform.Find("Text").GetComponent<Text>().text =
+                                                (Language == "En") ? "Login as a guest..." : "Зайти в качестве гостя...";
 
         deleteCharacter.transform.Find("Text").GetComponent<Text>().text =
                                                 (Language == "En") ? "Delete character..." : "Удалить персонажа...";
@@ -517,6 +520,7 @@ public class Menu : MonoBehaviour
         newCharacter.GetComponent<Button>().onClick.AddListener(() => {
             Destroy(newCharacter);
             Destroy(haveCharacter);
+            Destroy(iamGuest);
             Destroy(deleteCharacter);
             Destroy(startMenu);
             Sign_Slot(1);
@@ -524,13 +528,25 @@ public class Menu : MonoBehaviour
         haveCharacter.GetComponent<Button>().onClick.AddListener(() => {
             Destroy(newCharacter);
             Destroy(haveCharacter);
+            Destroy(iamGuest);
             Destroy(deleteCharacter);
             Destroy(startMenu);
             Sign_Slot(2);
         });
+        iamGuest.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+            Destroy(newCharacter);
+            Destroy(haveCharacter);
+            Destroy(iamGuest);
+            Destroy(deleteCharacter);
+            Destroy(startMenu);
+
+            MainMenu(true);
+        });
         deleteCharacter.GetComponent<Button>().onClick.AddListener(() => {
             Destroy(newCharacter);
             Destroy(haveCharacter);
+            Destroy(iamGuest);
             Destroy(deleteCharacter);
             Destroy(startMenu);
 
@@ -934,11 +950,11 @@ public class Menu : MonoBehaviour
         StartCoroutine(DestroyWithCheckingObject(3f, errInputs));
     }
 
-    private void MainMenu() { // Главное меню игры:
+    private void MainMenu(bool demo = false) { // Главное меню игры:
         currentIndexPage = 3;
         
         // Создание UI главного меню путем создания копии из подготовленного префаба:
-        GameObject mainManu_prefab = Instantiate(Resources.Load("Prefabs/UIPrefabs/ScrollViewOfMainMenu"), Canvas.transform) as GameObject;
+        GameObject mainManu_prefab = Instantiate(Resources.Load("Prefabs/UIPrefabs/MainMenu/ScrollViewOfMainMenu"), Canvas.transform) as GameObject;
         mainManu_prefab.name = "mainMenu";
         // Идентификация всех необходимых объектов вложенных в данный префаб:
         GameObject Nickname = GameObject.Find("Nickname_Text");
@@ -946,23 +962,33 @@ public class Menu : MonoBehaviour
         GameObject pvp = GameObject.Find("pvp");
         GameObject pveTop = GameObject.Find("pveTopBtn");
         GameObject pvpTop = GameObject.Find("pvpTopBtn");
-        GameObject character = GameObject.Find("characterBtn"); // Характеристики и вещи.
+        GameObject inventory = GameObject.Find("inventoryBtn"); // Характеристики и вещи.
         GameObject store = GameObject.Find("storeBtn");
         GameObject about = GameObject.Find("aboutBtn");
+        GameObject exit = GameObject.Find("exitBtn");
 
 
         // Инициализация записи с никнеймом:
-        Nickname.GetComponent<Text>().text = chInfo.Nickname;
-        
+        if (!demo) Nickname.GetComponent<Text>().text = chInfo.Nickname;
+        else Nickname.GetComponent<Text>().text = (Language == "En") ? "Nickname: Guest; Expirience: 0; Score: 0; MaxScore: 0;" : "Nickname: Гость; Expirience: 0; Score: 0; MaxScore: 0;";
+
+
         // ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ ВСЕХ КНОПОК В ГЛАВНОМ МЕНЮ:
         pve.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
-            // Получаем индекс стартовой сцены:
-            httpRequest.POST("PveIndex|" + chInfo.Nickname + "|" + chInfo.Password);
             statusOfWaiting = "PveIndex";
+
+            if (!demo) {
+                // Получаем индекс стартовой сцены:
+                httpRequest.POST("PveIndex|" + chInfo.Nickname + "|" + chInfo.Password);
+            }
+            else {
+                Checking(Demo.currentIndexOfPve.ToString());
+            }
         });
 
+        /*
         pvp.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
@@ -973,6 +999,7 @@ public class Menu : MonoBehaviour
             // ...
 
         });
+        */
 
         pveTop.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
@@ -982,6 +1009,7 @@ public class Menu : MonoBehaviour
             statusOfWaiting = "PveTopDatas";
         });
 
+        /*
         pvpTop.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
@@ -989,24 +1017,24 @@ public class Menu : MonoBehaviour
             httpRequest.POST("PvpTopDatas|" + chInfo.Nickname + "|" + chInfo.Password);
             statusOfWaiting = "PvpTopDatas";
         });
+        */
 
-        character.GetComponent<Button>().onClick.AddListener(() => {
+        inventory.GetComponent<Button>().onClick.AddListener(() => {
             clickBtn.Play();
 
             // Запрос на получение данных об:
-                // -- Максимальное здоровье
-                // -- Максимальная мана *
-                // -- Сила
-                // -- Текущий пве скор
-                // -- Максимальный пве скор
-                // -- Место в пве // Отдельным запросом
-                // -- Место в пвп
-                // -- Золото
-                // -- Наличие всех имеющихся предметов
-                // -- Наличие оружия взятого в руке // из локального источника
+            // -- Максимальное здоровье
+            // -- Максимальная мана *
+            // -- Сила
+            // -- Золото
+            // -- Наличие всех имеющихся предметов
+            // -- Наличие оружия взятого в руке // из локального источника
+            // -- активные экшены
 
-            httpRequest.POST("CharactersInformation|" + chInfo.Nickname + "|" + chInfo.Password);
-            statusOfWaiting = "CharactersInformation";
+            if (!demo) {
+                httpRequest.POST("InventoryInfo|" + chInfo.Nickname + "|" + chInfo.Password);
+                statusOfWaiting = "InventoryInfo";
+            }
         });
 
         store.GetComponent<Button>().onClick.AddListener(() => {
@@ -1022,10 +1050,19 @@ public class Menu : MonoBehaviour
 
             mainManu_prefab.SetActive(false); // Делаем главное меню временно не активным.
 
-            // Загружаем префаб с подменю:
+            GameObject prefabAbout = Instantiate(Resources.Load("Prefabs/UIPrefabs/About/Prefab_About") as GameObject, Canvas.transform);
+            prefabAbout.name = "Prefab_About";
+            prefabAbout.transform.localScale = Vector3.one;
+            RectTransform rtAbout = prefabAbout.GetComponent<RectTransform>();
+            rtAbout.localPosition = Vector3.zero;
+            
+        });
 
-            // ...
+        exit.GetComponent<Button>().onClick.AddListener(() => {
+            clickBtn.Play();
+            Destroy(mainManu_prefab);
 
+            startPageUI();
         });
     }
 
