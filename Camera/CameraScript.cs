@@ -8,9 +8,10 @@ public class CameraScript : MonoBehaviour
     void Start()
     {
         body = GameObject.Find("Body");
+        //body = GameObject.Find("Head");
     }
 
-    void LateUpdate()
+    void Update()
     {
         Vector3 newCamPos = new Vector3(body.transform.position.x, body.transform.position.y, -1f);
         transform.position = newCamPos;
