@@ -86,71 +86,83 @@ public class OBJS : MonoBehaviour
 
     void FixedUpdate()
     {
+        
         if (target != null) {
             Vector3 move = target.position - transform.position;
             rbObj.AddForce(move.normalized * accelFollowME * Time.fixedDeltaTime, ForceMode2D.Force);
         }
+        
     }
 
     // Функция для определения обратного вектора в результате столкновения двух объектов:
     private Vector2 VectorDirect(Vector2 cont) {
-        //float koeff = 2f;
+        float koeff = 1f;
         Vector2 center = transform.position;
         Vector2 mirrow = cont - center;
         mirrow = -mirrow;
-        return mirrow.normalized;
+        return mirrow.normalized * koeff;
     }
 	
-    private void oncollisionBlockSword(Collision2D collision) {
-        ContactPoint2D[] contact = collision.contacts;
-        Vector2 cont = contact[0].point;
+    private void oncollisionBlockSword(Collider2D collision) {
+        //ContactPoint2D[] contact = collision.contacts;
+        //Vector2 cont = contact[0].point;
+        Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
         BlockSword.Play();
     }
 
-    private void oncollisionBlock(Collision2D collision) {
-        ContactPoint2D[] contact = collision.contacts;
-        Vector2 cont = contact[0].point;
+    private void oncollisionBlock(Collider2D collision) {
+        //ContactPoint2D[] contact = collision.contacts;
+        //Vector2 cont = contact[0].point;
+        Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
         Block.Play();
     }
 
-    private void oncollisionHitFatality(Collision2D collision) {
-        ContactPoint2D[] contact = collision.contacts;
-        Vector2 cont = contact[0].point;
+    private void oncollisionHitFatality(Collider2D collision) {
+        //ContactPoint2D[] contact = collision.contacts;
+        //Vector2 cont = contact[0].point;
+        Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
         HitFatality.Play();
         //ShowEffect(new Color(255f, 0f, 0f, 255f));
     }
 
-    private void oncollisionEncrease(Collision2D collision) {
+    private void oncollisionEncrease(Collider2D collision) {
         print("Враг восстанавливает свое здоровье...");
 
         // ...
 
     }
 
-    private void oncollisionHit(Collision2D collision) {
-        ContactPoint2D[] contact = collision.contacts;
-        Vector2 cont = contact[0].point;
+    private void oncollisionHit(Collider2D collision) {
+        //ContactPoint2D[] contact = collision.contacts;
+        //Vector2 cont = contact[0].point;
+        Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
         Hit.Play();
     }
 
-    private void oncollisionGettingDamage(Collision2D collision) {
-        ContactPoint2D[] contact = collision.contacts;
-        Vector2 cont = contact[0].point;
+    private void oncollisionGettingDamage(Collider2D collision) {
+        //ContactPoint2D[] contact = collision.contacts;
+        Vector3 cont = collision.transform.position;
+        //Vector2 cont = contact[0].point;
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
         Hit.Play();
         ShowEffect(new Color(255f, 0f, 0f, 255f));
     }
 
-    private void OnCollisionEnter2D(Collision2D collision) {
+    private void OnTriggerEnter2D(Collider2D collision) {
         GameObject oth = collision.gameObject;
 
         if(gameObject.name[0] != '_') {
@@ -167,8 +179,9 @@ public class OBJS : MonoBehaviour
             else {
                 if (gameObject.name == "Head") {
                     if (oth.name == "__Head") { // Столкновение головами.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         Hit.Play();
@@ -178,8 +191,9 @@ public class OBJS : MonoBehaviour
                         oth.name == "__RightHand" ||
                         oth.name == "__LeftFoot" ||
                         oth.name == "__RightFoot") { // Столкновение головой с вражескими атакующими частями тела, кроме головы.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         Hit.Play();
@@ -190,8 +204,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "__LeftLeg" ||
                             oth.name == "__RightLeg" ||
                             oth.name == "__Body") { // Столкновение головой по уязвимым частям тела врага.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         Hit.Play();
@@ -226,8 +241,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "__LeftLeg" || 
                             oth.name == "__RightLeg" || 
                             oth.name == "__Body") { // Не получаем повреждений.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         //Block.Play();
@@ -318,8 +334,9 @@ public class OBJS : MonoBehaviour
             else {
                 if (gameObject.name == "__Head") {
                     if (oth.name == "Head") { // Столкновение головами.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         Hit.Play();
@@ -329,8 +346,9 @@ public class OBJS : MonoBehaviour
                         oth.name == "RightHand" ||
                         oth.name == "LeftFoot" ||
                         oth.name == "RightFoot") { // Столкновение головой с вражескими атакующими частями тела, кроме головы.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         Hit.Play();
@@ -341,8 +359,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "LeftLeg" ||
                             oth.name == "RightLeg" ||
                             oth.name == "Body") { // Столкновение головой по уязвимым частям тела врага.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         Hit.Play();
@@ -377,8 +396,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "LeftLeg" ||
                             oth.name == "RightLeg" ||
                             oth.name == "Body") { // Не получаем повреждений.
-                        ContactPoint2D[] contact = collision.contacts;
-                        Vector2 cont = contact[0].point;
+                        //ContactPoint2D[] contact = collision.contacts;
+                        //Vector2 cont = contact[0].point;
+                        Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
                         rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
                         //Block.Play();
