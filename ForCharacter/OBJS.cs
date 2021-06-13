@@ -16,14 +16,20 @@ public class OBJS : MonoBehaviour
     private Transform target;
 
     private float accelFollowME = 1000f;
-    public float accel = 3000f;
+    private float accel = 35f;
+    private float accelOwnLimbs = 100f;
+
+    private Transform ObjectOfParticleSystem_Sparks;
+    private ParticleSystem sparks;
+    private Transform ObjectOfParticleSystem_Blood;
+    private ParticleSystem blood;
 
     private List<string> listIgnore = new List<string>() {
         { "LeftWall" },
         { "Roof" },
         { "RightWall" },
         { "Ground" },
-        { "CircleAroundWall" },
+        { "CircleWall" },
         { "Body" },
         { "Head" },
         { "LeftShoulder" },
@@ -47,7 +53,7 @@ public class OBJS : MonoBehaviour
         { "Roof" },
         { "RightWall" },
         { "Ground" },
-        { "CircleAroundWall" },
+        { "CircleWall" },
         { "__Body" },
         { "__Head" },
         { "__LeftShoulder" },
@@ -82,16 +88,19 @@ public class OBJS : MonoBehaviour
         Block = GameObject.Find("BlockSound").GetComponent<AudioSource>();
         HitFatality = GameObject.Find("HitFatalitySound").GetComponent<AudioSource>();
         BlockSword = GameObject.Find("BlockSwordSound").GetComponent<AudioSource>();
+
+        ObjectOfParticleSystem_Sparks = GameObject.Find("Sparks").transform;
+        sparks = ObjectOfParticleSystem_Sparks.GetComponent<ParticleSystem>();
+        ObjectOfParticleSystem_Blood = GameObject.Find("Blood").transform;
+        blood = ObjectOfParticleSystem_Blood.GetComponent<ParticleSystem>();
     }
 
     void FixedUpdate()
     {
-        
         if (target != null) {
             Vector3 move = target.position - transform.position;
             rbObj.AddForce(move.normalized * accelFollowME * Time.fixedDeltaTime, ForceMode2D.Force);
         }
-        
     }
 
     // Функция для определения обратного вектора в результате столкновения двух объектов:
@@ -104,34 +113,36 @@ public class OBJS : MonoBehaviour
     }
 	
     private void oncollisionBlockSword(Collider2D collision) {
-        //ContactPoint2D[] contact = collision.contacts;
-        //Vector2 cont = contact[0].point;
         Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
-        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
-        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         BlockSword.Play();
+        ShowEffect(new Color(230f, 130f, 50f, 255f));
+
+        if (!sparks.isPlaying) {
+            ObjectOfParticleSystem_Sparks.position = transform.position;
+            sparks.Play();
+        }
     }
 
     private void oncollisionBlock(Collider2D collision) {
-        //ContactPoint2D[] contact = collision.contacts;
-        //Vector2 cont = contact[0].point;
         Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
-        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
-        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         Block.Play();
     }
 
     private void oncollisionHitFatality(Collider2D collision) {
-        //ContactPoint2D[] contact = collision.contacts;
-        //Vector2 cont = contact[0].point;
         Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
-        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
-        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         HitFatality.Play();
         //ShowEffect(new Color(255f, 0f, 0f, 255f));
+
+        if (!blood.isPlaying) {
+            ObjectOfParticleSystem_Blood.position = transform.position;
+            blood.Play();
+        }
     }
 
     private void oncollisionEncrease(Collider2D collision) {
@@ -142,24 +153,22 @@ public class OBJS : MonoBehaviour
     }
 
     private void oncollisionHit(Collider2D collision) {
-        //ContactPoint2D[] contact = collision.contacts;
-        //Vector2 cont = contact[0].point;
         Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
-        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
-        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         Hit.Play();
     }
 
     private void oncollisionGettingDamage(Collider2D collision) {
-        //ContactPoint2D[] contact = collision.contacts;
         Vector3 cont = collision.transform.position;
-        //Vector2 cont = contact[0].point;
         Vector2 move = VectorDirect(cont);
-        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
-        collision.GetComponent<Rigidbody2D>().AddForce(-move * accel * Time.deltaTime, ForceMode2D.Impulse);
+        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         Hit.Play();
         ShowEffect(new Color(255f, 0f, 0f, 255f));
+        if (!blood.isPlaying) {
+            ObjectOfParticleSystem_Blood.position = transform.position;
+            blood.Play();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
@@ -175,15 +184,17 @@ public class OBJS : MonoBehaviour
                 }
             }
 
-            if (bFlag) { }
+            if (bFlag) {
+                Vector3 cont = collision.transform.position;
+                Vector2 move = VectorDirect(cont);
+                rbObj.AddForce(move * accelOwnLimbs, ForceMode2D.Force);
+            }
             else {
                 if (gameObject.name == "Head") {
                     if (oth.name == "__Head") { // Столкновение головами.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
@@ -191,11 +202,9 @@ public class OBJS : MonoBehaviour
                         oth.name == "__RightHand" ||
                         oth.name == "__LeftFoot" ||
                         oth.name == "__RightFoot") { // Столкновение головой с вражескими атакующими частями тела, кроме головы.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
@@ -204,11 +213,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "__LeftLeg" ||
                             oth.name == "__RightLeg" ||
                             oth.name == "__Body") { // Столкновение головой по уязвимым частям тела врага.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
@@ -241,11 +248,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "__LeftLeg" || 
                             oth.name == "__RightLeg" || 
                             oth.name == "__Body") { // Не получаем повреждений.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         //Block.Play();
                     }
                     else if (oth.name == "__WeaponInLeftHand" ||
@@ -330,15 +335,17 @@ public class OBJS : MonoBehaviour
                 }
             }
 
-            if (bFlag) {}
+            if (bFlag) {
+                Vector3 cont = collision.transform.position;
+                Vector2 move = VectorDirect(cont);
+                rbObj.AddForce(move * accelOwnLimbs, ForceMode2D.Force);
+            }
             else {
                 if (gameObject.name == "__Head") {
                     if (oth.name == "Head") { // Столкновение головами.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
@@ -346,11 +353,9 @@ public class OBJS : MonoBehaviour
                         oth.name == "RightHand" ||
                         oth.name == "LeftFoot" ||
                         oth.name == "RightFoot") { // Столкновение головой с вражескими атакующими частями тела, кроме головы.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
@@ -359,11 +364,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "LeftLeg" ||
                             oth.name == "RightLeg" ||
                             oth.name == "Body") { // Столкновение головой по уязвимым частям тела врага.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
@@ -396,11 +399,9 @@ public class OBJS : MonoBehaviour
                             oth.name == "LeftLeg" ||
                             oth.name == "RightLeg" ||
                             oth.name == "Body") { // Не получаем повреждений.
-                        //ContactPoint2D[] contact = collision.contacts;
-                        //Vector2 cont = contact[0].point;
                         Vector3 cont = collision.transform.position;
                         Vector2 move = VectorDirect(cont);
-                        rbObj.AddForce(move * accel * Time.deltaTime, ForceMode2D.Impulse);
+                        rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         //Block.Play();
                     }
                     else if (oth.name == "WeaponInLeftHand" ||
@@ -485,6 +486,10 @@ public class OBJS : MonoBehaviour
     private void ShowEffect(Color color) {
         spriteRenderer.color = color;
         StartCoroutine(SetTimeout(0.1f));
+    }
+
+    private void ShowEffectAnother(Color color) {
+
     }
 
 }

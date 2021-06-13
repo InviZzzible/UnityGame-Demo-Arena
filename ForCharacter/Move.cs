@@ -11,7 +11,9 @@ public class Move : MonoBehaviour {
         rbHead = GetComponent<Rigidbody2D>();
     }
 
+
     void FixedUpdate() {
+
         // Реализация кнопок перемещения персонажа:
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) {
             Vector2 move = new Vector2(transform.localPosition.x - 100f, transform.localPosition.y);
