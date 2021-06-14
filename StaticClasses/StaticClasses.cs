@@ -76,5 +76,4 @@ public static class StaticClasses
         public static DateTime lastVisit;
 
     }
-
 }

@@ -23,6 +23,8 @@ public class OBJS : MonoBehaviour
     private ParticleSystem sparks;
     private Transform ObjectOfParticleSystem_Blood;
     private ParticleSystem blood;
+    private Transform ObjectOfParticleSystem_Block;
+    private ParticleSystem block;
 
     private List<string> listIgnore = new List<string>() {
         { "LeftWall" },
@@ -89,10 +91,12 @@ public class OBJS : MonoBehaviour
         HitFatality = GameObject.Find("HitFatalitySound").GetComponent<AudioSource>();
         BlockSword = GameObject.Find("BlockSwordSound").GetComponent<AudioSource>();
 
-        ObjectOfParticleSystem_Sparks = GameObject.Find("Sparks").transform;
+        ObjectOfParticleSystem_Sparks = (Instantiate(Resources.Load("Prefabs/Effects/Sparks")) as GameObject).transform;
         sparks = ObjectOfParticleSystem_Sparks.GetComponent<ParticleSystem>();
-        ObjectOfParticleSystem_Blood = GameObject.Find("Blood").transform;
+        ObjectOfParticleSystem_Blood = (Instantiate(Resources.Load("Prefabs/Effects/Blood")) as GameObject).transform;
         blood = ObjectOfParticleSystem_Blood.GetComponent<ParticleSystem>();
+        ObjectOfParticleSystem_Block = (Instantiate(Resources.Load("Prefabs/Effects/Block")) as GameObject).transform;
+        block = ObjectOfParticleSystem_Block.GetComponent<ParticleSystem>();
     }
 
     void FixedUpdate()
@@ -100,6 +104,11 @@ public class OBJS : MonoBehaviour
         if (target != null) {
             Vector3 move = target.position - transform.position;
             rbObj.AddForce(move.normalized * accelFollowME * Time.fixedDeltaTime, ForceMode2D.Force);
+        }
+
+        if(Time.timeScale < 1f) {
+            Time.timeScale += 0.0005f;
+            Time.fixedDeltaTime = Time.timeScale * 0.02f;
         }
     }
 
@@ -112,17 +121,40 @@ public class OBJS : MonoBehaviour
         return mirrow.normalized * koeff;
     }
 	
+    private void FreezGameTime(float sec) {
+        Time.timeScale = sec;
+        Time.fixedDeltaTime = Time.timeScale * 0.02f;
+    }
+
+    private void EffectPlay(string effectName) {
+        if(effectName == "Sparks") {
+            if (!sparks.isPlaying) {
+                ObjectOfParticleSystem_Sparks.position = transform.position;
+                sparks.Play();
+            }
+        }
+        else if(effectName == "Blood") {
+            if (!blood.isPlaying) {
+                ObjectOfParticleSystem_Blood.position = transform.position;
+                blood.Play();
+            }
+        }
+        else if(effectName == "Block") {
+            if (!block.isPlaying) {
+                ObjectOfParticleSystem_Block.position = transform.position;
+                block.Play();
+            }
+        }
+    }
+
     private void oncollisionBlockSword(Collider2D collision) {
         Vector3 cont = collision.transform.position;
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         BlockSword.Play();
         ShowEffect(new Color(230f, 130f, 50f, 255f));
-
-        if (!sparks.isPlaying) {
-            ObjectOfParticleSystem_Sparks.position = transform.position;
-            sparks.Play();
-        }
+        EffectPlay("Sparks");
+        //FreezGameTime(0.1f);
     }
 
     private void oncollisionBlock(Collider2D collision) {
@@ -130,6 +162,8 @@ public class OBJS : MonoBehaviour
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         Block.Play();
+        EffectPlay("Block");
+        //FreezGameTime(0.1f);
     }
 
     private void oncollisionHitFatality(Collider2D collision) {
@@ -137,12 +171,8 @@ public class OBJS : MonoBehaviour
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         HitFatality.Play();
-        //ShowEffect(new Color(255f, 0f, 0f, 255f));
-
-        if (!blood.isPlaying) {
-            ObjectOfParticleSystem_Blood.position = transform.position;
-            blood.Play();
-        }
+        EffectPlay("Blood");
+        //FreezGameTime(0.1f);
     }
 
     private void oncollisionEncrease(Collider2D collision) {
@@ -157,6 +187,7 @@ public class OBJS : MonoBehaviour
         Vector2 move = VectorDirect(cont);
         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
         Hit.Play();
+        //FreezGameTime(0.3f);
     }
 
     private void oncollisionGettingDamage(Collider2D collision) {
@@ -197,6 +228,8 @@ public class OBJS : MonoBehaviour
                         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
+                        //FreezGameTime(0.1f);
                     }
                     else if (oth.name == "__LeftHand" ||
                         oth.name == "__RightHand" ||
@@ -207,6 +240,7 @@ public class OBJS : MonoBehaviour
                         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
                     }
                     else if(oth.name == "__LeftShoulder" ||
                             oth.name == "__RightShoulder" ||
@@ -218,6 +252,8 @@ public class OBJS : MonoBehaviour
                         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
+                        //FreezGameTime(0.1f);
                     }
                     else if (oth.name == "__WeaponInLeftHand" ||
                              oth.name == "__WeaponInRightHand" ||
@@ -226,9 +262,10 @@ public class OBJS : MonoBehaviour
                              oth.name == "__Horns") { // Столкновение головой об оружку или рога...
                         oncollisionHitFatality(collision);
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
                     }
                     else if (oth.name == "__Nimbus") { // Столкновение головой о нимб
-                        
+                        EffectPlay("Blood");
                     }
                 }
                 else if (gameObject.name == "Body" ||
@@ -348,6 +385,8 @@ public class OBJS : MonoBehaviour
                         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
+                        //FreezGameTime(0.1f);
                     }
                     else if (oth.name == "LeftHand" ||
                         oth.name == "RightHand" ||
@@ -358,6 +397,7 @@ public class OBJS : MonoBehaviour
                         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
                     }
                     else if (oth.name == "LeftShoulder" ||
                             oth.name == "RightShoulder" ||
@@ -369,6 +409,8 @@ public class OBJS : MonoBehaviour
                         rbObj.AddForce(move * accel, ForceMode2D.Impulse);
                         Hit.Play();
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
+                        EffectPlay("Blood");
+                        //FreezGameTime(0.1f);
                     }
                     else if (oth.name == "WeaponInLeftHand" ||
                              oth.name == "WeaponInRightHand" ||
@@ -379,7 +421,7 @@ public class OBJS : MonoBehaviour
                         ShowEffect(new Color(255f, 0f, 0f, 255f));
                     }
                     else if (oth.name == "__Nimbus") { // Столкновение головой о нимб
-
+                        EffectPlay("Blood");
                     }
                 }
                 else if (gameObject.name == "__Body" ||
